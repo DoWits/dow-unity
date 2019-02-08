@@ -64,6 +64,7 @@
     <Compile Include="Assets\Scripts\Board.cs" />
     <Compile Include="Assets\Scripts\Cell.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\LaserScript.cs" />
     <Compile Include="Assets\Scripts\MirrorPiece.cs" />
     <Compile Include="Assets\Scripts\PieceManager.cs" />
     <Compile Include="Assets\Scripts\PlayerButtons.cs" />

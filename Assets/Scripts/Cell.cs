@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Cell : MonoBehaviour
 {
     //TODO - Remove the variable mOutlineImage since we're using buttons instead
-	public Image mOutlineImage;
+	//public Image mOutlineImage;
 
 	[HideInInspector]
 	public Vector2Int mBoardPosition = Vector2Int.zero;

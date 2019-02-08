@@ -2,12 +2,12 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
+using System.Collections;
 
-//TODO : Check if we need to seperate the BasePieces into PlayerPiece and MirrorPiece
 
 public abstract class BasePiece : EventTrigger
 {
-
+    public GameObject ShootButtonObject;
     public Color mColor = Color.clear;
     protected Cell mCurrentCell = null;
     protected RectTransform mRectTransform = null;
@@ -18,18 +18,20 @@ public abstract class BasePiece : EventTrigger
     //This variable is for Locking the Piece's movement 
     protected bool mLockMovement = false;
     protected bool mMouseSelected = false;
+    protected PlayerButtons mPlayerButtons = null;
+
 
     GameObject mPieceButtons = null;
-    public virtual void Setup(string orientation, Color newTeamColor, Color32 newSpriteColor, PieceManager newPieceManager, GameObject pieceButtons)
+    public virtual void Setup(string orientation, Color newTeamColor, Color32 newSpriteColor, PieceManager newPieceManager, GameObject pieceButtons, PlayerButtons playerButtons)
     {
 
-
+        mPlayerButtons = playerButtons;
         mPieceButtons = pieceButtons;
         mButtons = mPieceButtons.GetComponentsInChildren<Button>();
         string s = base.name;
 
         foreach (Button b in mButtons)
-            b.onClick.AddListener(() => newPieceManager.MovePiece(this, b.name));
+            b.onClick.AddListener(() => MovePiece(this, b.name));
 
         ClearButtons();
 
@@ -42,27 +44,13 @@ public abstract class BasePiece : EventTrigger
 
     }
 
-    public bool getLockMovement()
-    { return mLockMovement; }
-
-    public void setLockMovement(bool locker)
-    { mLockMovement = locker; }
-
-    public Cell getCurrentCell()
-    { return mCurrentCell; }
-
-    public void setCurrentCell(Cell newCell)
-    { mCurrentCell = newCell; }
-
-    public GameObject getPieceButtons()
-    { return mPieceButtons; }
+  
 
     public void Place(Cell newCell)
     {
         //Place them in the given Cell
 
         mCurrentCell = newCell;
-       // mOriginalCell = newCell;
         mCurrentCell.mCurrentPiece = this;
 
         transform.position = newCell.transform.position;
@@ -75,9 +63,6 @@ public abstract class BasePiece : EventTrigger
 
     
 
-    //May not need to keep this as virtual since all pieces have similar movement - (Overridable functions base class' function needs to be virtual)
-    //TODO still need to check the validity of each call - Done
-    //TODO remember that you cannot walk over another sprite - Done
     public void ShowButtons()
     {
         //Hide every other piece's buttons
@@ -90,7 +75,7 @@ public abstract class BasePiece : EventTrigger
 
 
         //If in case the Piece's movement is locked, then exit this function
-        if (getLockMovement())
+        if (mLockMovement)
             return;
 
 
@@ -123,56 +108,28 @@ public abstract class BasePiece : EventTrigger
 
                 if (x == -1 && y == 0)
                 {
-                    foreach (Button button in mButtons)
-                    {
-                        if (button.name.Equals("Move Left"))
-                            button.gameObject.SetActive(true);
-                    }
+                    mPlayerButtons.Show("Move Left");
                 }
                 else if (x == 1 && y == 0)
                 {
-                    foreach (Button button in mButtons)
-                    {
-                        if (button.name.Equals("Move Right"))
-                            button.gameObject.SetActive(true);
-                    }
+                    mPlayerButtons.Show("Move Right");
                 }
                 else if (x == 0 && y == 1)
                 {
-                    foreach (Button button in mButtons)
-                    {
-                        if (button.name.Equals("Move Up"))
-                            button.gameObject.SetActive(true);
-                    }
+                    mPlayerButtons.Show("Move Up");                   
                 }
                 else if (x == 0 && y == -1)
                 {
-                    foreach (Button button in mButtons)
-                    {
-                        if (button.name.Equals("Move Down"))
-                            button.gameObject.SetActive(true);
-                    }
+                    mPlayerButtons.Show("Move Down");
                 }
                
-
-
-
-
-
-
-
-
-
             }
         }
 
-        //put in rotate left and rotate right irrespective
+        //put in rotate left and rotate right irrespective of the piece
 
-        foreach (Button button in mButtons)
-        {
-            if(button.name.Contains("Rotate"))
-                button.gameObject.SetActive(true);
-        }
+        mPlayerButtons.Show("Rotate Left");
+        mPlayerButtons.Show("Rotate Right");
         mMouseSelected = true;
 
 
@@ -181,19 +138,7 @@ public abstract class BasePiece : EventTrigger
     //Remove the Highlighted cells and empty its list
     public void ClearButtons()
     {
-        /*
-        foreach (Cell cell in mHighlightedCells)
-            cell.mOutlineImage.enabled = false;
-
-        mHighlightedCells.Clear();
-        */
-
-        foreach (Button child in mButtons)
-        {
-            child.gameObject.SetActive(false);
-            // child.GetComponent<Renderer>().enabled = true;
-        }
-
+        mPlayerButtons.HideAll();
 
         mMouseSelected = false;
     }
@@ -205,38 +150,164 @@ public abstract class BasePiece : EventTrigger
 
         if (!mMouseSelected)
         {
-            
             ShowButtons();
         }
 
         else
         {
-            //get the next selected click location
-            Vector3 newPosition = (Vector3)eventData.delta;
-
-            //If the new click location is in one of the highlighted cells, move the sprite there
-
-            /*
-            if (newPosition.)
-
-            //If the new selection is not a highlighted cell, deselect everything
-            else
-            {
-            }
-            */
             ClearButtons();
+        }
+
+    }
+
+    public virtual void ChangeTurn()
+    { }
+    public virtual void DisableShoot() { }
+    public virtual void EnableShoot() { }
+
+    public virtual void MovePiece(BasePiece currentPiece, string buttonName)
+    {
+        IEnumerator coroutine = MovePieceRoutine(currentPiece, buttonName);
+        StartCoroutine(coroutine);
+    }
+
+    public virtual IEnumerator MovePieceRoutine(BasePiece currentPiece, string buttonName)
+    {
+        BasePiece 
+            p1 = null, 
+            p2 = null;
+
+        Cell currentCell = currentPiece.mCurrentCell;
+        Cell targetCell = currentCell;
+        //Set all peices as Locked
+        foreach (BasePiece piece in mPieceManager.mAllPieces)
+        {
+
+
+            if (piece.mOrientation.Equals("left") || piece.mOrientation.Equals("up") || piece.mOrientation.Equals("down") || piece.mOrientation.Equals("right"))
+            {
+                if (piece.mLockMovement)
+                    p1 = piece;
+                else
+                    p2 = piece;
+
+            }
+            piece.mLockMovement = true;
+            piece.ClearButtons();
+            
+        }
+        //disable the shoot buttons so that p2 can't press it during the animation
+        p2.DisableShoot();
+
+        string playerName = p2.gameObject.name;
+        string pieceName = currentPiece.gameObject.name;
+
+        Debug.Log(playerName + " : " + pieceName + " " + buttonName);
+
+        int x, y;
+        x = currentCell.mBoardPosition.x;
+        y = currentCell.mBoardPosition.y;
+
+        //Move the required piece
+        if (buttonName.Equals("Rotate Left"))
+        {
+            Quaternion initialRotation = currentPiece.transform.rotation;
+            float targetRotation = 90f;
+            
+            while(Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                yield return RotateAnimation(currentPiece, targetRotation);
+
+        }
+        else if (buttonName.Equals("Rotate Right"))
+        {
+
+            Quaternion initialRotation = currentPiece.transform.rotation;
+            float targetRotation = -90f;
+
+            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                yield return RotateAnimation(currentPiece, targetRotation);
+  
+
+        }
+        else if (buttonName.Equals("Move Up"))
+        {
+            //get the current cell of the piece
+            //set the current cell to the new cell
+            //set the position of the piece as the new Cell
+
+            y = y + 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+        }
+        else if (buttonName.Equals("Move Down"))
+        {
+            y = y - 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+
+
+        }
+        else if (buttonName.Equals("Move Left"))
+        {
+            x = x - 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+
+
+        }
+        else if (buttonName.Equals("Move Right"))
+        {
+            x = x + 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
 
         }
 
+        currentPiece.mCurrentCell = targetCell;
+        Vector3 distanceToTravel = targetCell.transform.position - currentPiece.transform.position;
+        while (currentPiece.transform.position != targetCell.transform.position)
+        {
+            
+            yield return MoveAnimation(currentPiece, distanceToTravel);
+        }
+        currentPiece.mPieceButtons.transform.position = targetCell.transform.position;
+        currentCell.mCurrentPiece = null;
+        targetCell.mCurrentPiece = currentPiece;
 
+
+
+        foreach (BasePiece piece in mPieceManager.mAllPieces)
+        {
+            piece.mLockMovement = (false);
+            piece.ClearButtons();
+        }
+
+        if (currentPiece != p1 && currentPiece != p2)
+            currentPiece.mLockMovement = true;
+
+        p1.mLockMovement = (true);
+        p2.mLockMovement = (false);
+
+        //Change turns for both players
+        p1.ChangeTurn();
+        p2.ChangeTurn();
 
 
     }
 
+    public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
+    {
+        mPiece.transform.rotation *= Quaternion.Euler(0, 0, targetRotation / 10);
+        
+        yield return 0;
+    }
+
+    public IEnumerator MoveAnimation(BasePiece currentPiece, Vector3 distanceToTravel)
+    {
+
+        currentPiece.transform.position = currentPiece.transform.position + (distanceToTravel / 10);//, ref vel, smoothTime);
+
+        yield return 0;
+    }
     
 
-
-
+   
 }
 
 

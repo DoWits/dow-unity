@@ -3,7 +3,9 @@ guid: c549a73a3af892d44a3af5ddf4378dd4
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - mButtonPrefab: {fileID: 7232550736902731156, guid: 301cbd3d76528bf4eb5ce4b8c3cc567a,
+      type: 3}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 
