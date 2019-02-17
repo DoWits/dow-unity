@@ -44,6 +44,9 @@ public abstract class BasePiece : EventTrigger
 
     }
 
+    public string getOrientation()
+    { return mOrientation; }
+
   
 
     public void Place(Cell newCell)
@@ -143,7 +146,6 @@ public abstract class BasePiece : EventTrigger
         mMouseSelected = false;
     }
 
-    
     public override void OnPointerUp(PointerEventData eventData)
     {
         base.OnPointerUp(eventData);
@@ -160,6 +162,8 @@ public abstract class BasePiece : EventTrigger
 
     }
 
+    
+
     public virtual void ChangeTurn()
     { }
     public virtual void DisableShoot() { }
@@ -170,6 +174,15 @@ public abstract class BasePiece : EventTrigger
         IEnumerator coroutine = MovePieceRoutine(currentPiece, buttonName);
         StartCoroutine(coroutine);
     }
+
+
+    public virtual IEnumerator ShootingAnimation()
+    {
+
+
+        yield return 0; 
+    }
+
 
     public virtual IEnumerator MovePieceRoutine(BasePiece currentPiece, string buttonName)
     {
@@ -186,10 +199,12 @@ public abstract class BasePiece : EventTrigger
 
             if (piece.mOrientation.Equals("left") || piece.mOrientation.Equals("up") || piece.mOrientation.Equals("down") || piece.mOrientation.Equals("right"))
             {
+                //It's not this player's turn
                 if (piece.mLockMovement)
-                    p1 = piece;
-                else
                     p2 = piece;
+                //It is this player's turn
+                else
+                    p1 = piece;
 
             }
             piece.mLockMovement = true;
@@ -197,9 +212,9 @@ public abstract class BasePiece : EventTrigger
             
         }
         //disable the shoot buttons so that p2 can't press it during the animation
-        p2.DisableShoot();
+        p1.DisableShoot();
 
-        string playerName = p2.gameObject.name;
+        string playerName = p1.gameObject.name;
         string pieceName = currentPiece.gameObject.name;
 
         Debug.Log(playerName + " : " + pieceName + " " + buttonName);
@@ -217,6 +232,23 @@ public abstract class BasePiece : EventTrigger
             while(Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
                 yield return RotateAnimation(currentPiece, targetRotation);
 
+            //Change the orientation of the piece
+
+            if (currentPiece.mOrientation.Equals("up"))
+                currentPiece.mOrientation = "left";
+            else if (currentPiece.mOrientation.Equals("left"))
+                currentPiece.mOrientation = "down";
+            else if (currentPiece.mOrientation.Equals("down"))
+                currentPiece.mOrientation = "right";
+            else if (currentPiece.mOrientation.Equals("right"))
+                currentPiece.mOrientation = "up";
+            else if (currentPiece.mOrientation.Equals("+1"))
+                currentPiece.mOrientation = "-1";
+            else
+                currentPiece.mOrientation = "+1";
+
+
+
         }
         else if (buttonName.Equals("Rotate Right"))
         {
@@ -226,8 +258,21 @@ public abstract class BasePiece : EventTrigger
 
             while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
                 yield return RotateAnimation(currentPiece, targetRotation);
-  
 
+            //Change the orientation of the piece
+
+            if (currentPiece.mOrientation.Equals("left"))
+                currentPiece.mOrientation = "up";
+            else if (currentPiece.mOrientation.Equals("down"))
+                currentPiece.mOrientation = "left";
+            else if (currentPiece.mOrientation.Equals("right"))
+                currentPiece.mOrientation = "down";
+            else if(currentPiece.mOrientation.Equals("up"))
+                currentPiece.mOrientation = "right";
+            else if (currentPiece.mOrientation.Equals("+1"))
+                currentPiece.mOrientation = "-1";
+            else
+                currentPiece.mOrientation = "+1";
         }
         else if (buttonName.Equals("Move Up"))
         {
@@ -266,11 +311,28 @@ public abstract class BasePiece : EventTrigger
             
             yield return MoveAnimation(currentPiece, distanceToTravel);
         }
+
+
         currentPiece.mPieceButtons.transform.position = targetCell.transform.position;
         currentCell.mCurrentPiece = null;
         targetCell.mCurrentPiece = currentPiece;
 
 
+        yield return p1.ShootingAnimation();
+
+        /*
+         * After the shootanimation, call a piecemanagaer function that makes checks if anyone was shot
+         */
+
+        BasePiece shotPlayer = mPieceManager.GetPlayerIfShot(
+            p1.mCurrentCell.GetCellPosition().x, 
+            p1.mCurrentCell.GetCellPosition().y,
+            p1.mOrientation);
+
+        if (shotPlayer == p1)
+            Debug.Log(p2.name + " Wins");
+        else if (shotPlayer == p2)
+            Debug.Log(p1.name + " Wins");
 
         foreach (BasePiece piece in mPieceManager.mAllPieces)
         {
@@ -281,8 +343,10 @@ public abstract class BasePiece : EventTrigger
         if (currentPiece != p1 && currentPiece != p2)
             currentPiece.mLockMovement = true;
 
-        p1.mLockMovement = (true);
-        p2.mLockMovement = (false);
+          p2.mLockMovement = (true);
+          p1.mLockMovement = (false);
+
+
 
         //Change turns for both players
         p1.ChangeTurn();
@@ -309,5 +373,3 @@ public abstract class BasePiece : EventTrigger
 
    
 }
-
-

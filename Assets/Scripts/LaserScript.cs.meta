@@ -4,12 +4,13 @@ MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - laserStart: {fileID: 941900943206334178, guid: 40ac3b9c73ba15144a503bd7beea6c86,
+  - laserStartPrefab: {fileID: 941900943206334178, guid: 40ac3b9c73ba15144a503bd7beea6c86,
       type: 3}
-  - laserMiddle: {fileID: 4932976379389508994, guid: 7ace5b9153af5404185bf83b9db45c4f,
+  - laserMiddlePrefab: {fileID: 4932976379389508994, guid: 7ace5b9153af5404185bf83b9db45c4f,
       type: 3}
-  - laserEnd: {fileID: 5195187769454833791, guid: 4137bac31d8af33448f1808dc0611522,
+  - laserEndPrefab: {fileID: 5195187769454833791, guid: 4137bac31d8af33448f1808dc0611522,
       type: 3}
+  - player: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
+﻿using UnityEngine;
 
 public class Cell : MonoBehaviour
 {
@@ -26,6 +23,19 @@ public class Cell : MonoBehaviour
 		mBoardPosition = newBoardPosition;
 		mBoard = newBoard;
 		mRectTransform = GetComponent<RectTransform>();
+    }
+
+    public bool IsEmpty()
+    {
+        if (mCurrentPiece == null)
+            return true;
+        else
+            return false;
+    }
+
+    public Vector2Int GetCellPosition()
+    {
+        return mBoardPosition;
     }
 
     // Update is called once per frame

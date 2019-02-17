@@ -1,7 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class PlayerPiece : BasePiece
 {
@@ -10,20 +10,73 @@ public class PlayerPiece : BasePiece
     Button shootButton;
     ColorBlock enable;
     ColorBlock disable;
-    public GameObject Laser;
     public LaserScript laserObject;
-    
-    public override void Setup(string orientation, Color newTeamColor, Color32 newSpriteColor, PieceManager newPieceManager, GameObject pieceButtons, PlayerButtons playerButtons)
+
+    float increment = 0f;
+
+    public Vector3 GetLaserStartPoint()
+    {
+        increment = 1f;
+
+        Vector3 LaserPosition = this.transform.position;
+
+        Dictionary<string, Vector3> IncrementList = new Dictionary<string,Vector3>()
+        {
+            { "up", new Vector3(0,increment,0)},
+            { "down", new Vector3(0,-increment,0)},
+            { "left", new Vector3(-increment,0,0)},
+            { "right", new Vector3(increment,0,0)},
+
+        };
+        LaserPosition = IncrementList[this.mOrientation];
+
+        return LaserPosition;
+    }
+
+    /* This probably isn't neccessary 
+    public Vector3 GetLaserDirection()
+    {
+
+        increment = 1f;
+
+        Vector3 LaserDirection = this.transform.position;
+
+        Dictionary<string, Vector3> IncrementList = new Dictionary<string, Vector3>()
+        {
+            { "up", new Vector3(0,increment,0)},
+            { "down", new Vector3(0,-increment,0)},
+            { "left", new Vector3(-increment,0,0)},
+            { "right", new Vector3(increment,0,0)},
+
+        };
+        LaserPosition = IncrementList[this.mOrientation];
+
+        return LaserPosition;
+    }*/
+
+    public override void Setup(
+        string orientation, Color newTeamColor,
+        Color32 newSpriteColor, PieceManager newPieceManager,
+        GameObject pieceButtons, PlayerButtons playerButtons)
     {
         /*
         GameObject ShootButton = Instantiate(mButtonPrefab);
         ShootButton.transform.SetParent(transform);
         */
 
-      //  Laser = transform.GetChild(0).gameObject;
-        
+        // Laser = transform.GetChild(0).gameObject;
+        // Laser.
+
+
         /*Laser.transform.SetParent(this.transform);
         Laser.transform.localPosition = new Vector3(0, 29, 0);*/
+
+        //GameObject Laser = Instantiate(LaserPrefab) as GameObject ;
+       // Laser.transform.SetParent(this.transform);
+
+        laserObject = (LaserScript)this.gameObject.GetComponent("LaserScript");
+
+        laserObject.Setup(this);
 
         shootButton = ShootButtonObject.GetComponent<Button>();
         shootButton.GetComponent<RectTransform>().position = new Vector3(0, -250, 0);
@@ -58,6 +111,11 @@ public class PlayerPiece : BasePiece
 
         }
 
+    }
+
+    public override IEnumerator ShootingAnimation()
+    {
+        return laserObject.ShootLaserFromPointAnimation(this.transform.position, GetLaserStartPoint(), this.mCurrentCell.mBoard, (BasePiece)this);
     }
 
     public override void DisableShoot()

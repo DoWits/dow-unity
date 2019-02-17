@@ -11,7 +11,7 @@ public class PieceManager : MonoBehaviour
     //List of Mirrors and Players
 
     private List<BasePiece> mMirrors = null;
-
+    private Board mBoard;
     private int mTotalMirrors = 4;
     private BasePiece
         mPlayer1 = null,
@@ -47,7 +47,8 @@ public class PieceManager : MonoBehaviour
 
     public void Setup(Board board, List<BasePiece> allPieces)
     {
-        
+        mBoard = board;
+
         mPlayer1 = CreatePlayer("up", Color.white, new Color32(80, 124, 159, 255), board, "P1");
         mPlayer2 = CreatePlayer("down", Color.black, new Color32(210, 95, 64, 255), board, "P2");
         mMirrors = CreateMirrors(Color.gray, new Color32(119, 136, 153, 255), board);
@@ -92,8 +93,8 @@ public class PieceManager : MonoBehaviour
             //Set Scale and Position - For the Holder of object We need to manually do all of the settings from the script because I can't get it done from the GUI
             pieceHolderObject.transform.localPosition = new Vector3(0, 0, 0);
             pieceHolderObject.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-            pieceHolderObject.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
-            pieceHolderObject.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+            pieceHolderObject.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
+            pieceHolderObject.GetComponent<RectTransform>().pivot = new Vector2(0.0f, 0.0f);
             pieceHolderObject.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
             pieceHolderObject.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
             pieceHolderObject.transform.localScale = new Vector3(1, 1, 1);
@@ -153,8 +154,8 @@ public class PieceManager : MonoBehaviour
         //Set Scale and Position - For the Holder of object We need to manually do all of the settings from the script because I can't get it done from the GUI
         pieceHolderObject.transform.localPosition = new Vector3(0, 0, 0);
         pieceHolderObject.GetComponent<RectTransform>().anchorMin = new Vector2(0, 0);
-        pieceHolderObject.GetComponent<RectTransform>().anchorMax = new Vector2(1, 1);
-        pieceHolderObject.GetComponent<RectTransform>().pivot = new Vector2(0.5f, 0.5f);
+        pieceHolderObject.GetComponent<RectTransform>().anchorMax = new Vector2(0, 0);
+        pieceHolderObject.GetComponent<RectTransform>().pivot = new Vector2(0.0f, 0.0f);
         pieceHolderObject.GetComponent<RectTransform>().offsetMax = new Vector2(0, 0);
         pieceHolderObject.GetComponent<RectTransform>().offsetMin = new Vector2(0, 0);
         pieceHolderObject.transform.localScale = new Vector3(1, 1, 1);
@@ -200,7 +201,63 @@ public class PieceManager : MonoBehaviour
 
     void Update()
     {
-        
+
+    }
+
+   
+
+    public BasePiece GetPlayerIfShot(int x, int y, string direction)
+    {
+        Cell currentCell = mBoard.mAllCells[x, y];
+
+        Dictionary<string, Vector2Int> getDirection = new Dictionary<string, Vector2Int>()
+        {
+            { "up", new Vector2Int(0,1)},
+            { "down", new Vector2Int(0,-1)},
+            { "left", new Vector2Int(-1,0) },
+            { "right", new Vector2Int(1,0) }
+        };
+
+        Vector2Int directionIncrement = getDirection[direction];
+
+        int X = 0,Y=0;
+        BasePiece encounteredPiece = null ;
+        //keep going till there you hit the board or a player
+        do
+        {
+            encounteredPiece = null;
+            X = currentCell.GetCellPosition().x + directionIncrement.x;
+            Y = currentCell.GetCellPosition().y + directionIncrement.y;
+            if (X >= 0 && Y >= 0 && X < 4 && Y < 4)
+            {
+                currentCell = mBoard.mAllCells[X, Y];
+                encounteredPiece = mBoard.mAllCells[X, Y].mCurrentPiece;
+            }
+
+            if (encounteredPiece != null)
+            {
+
+                if (encounteredPiece.getOrientation().Equals("+1") || encounteredPiece.getOrientation().Equals("-1"))
+                {
+                    int flipSign = 1;
+                    if (encounteredPiece.getOrientation().Equals("-1"))
+                        flipSign = -1;
+
+                    //update the new direction increment
+                    int tempX = (int)directionIncrement.x;
+                    int tempY = (int)directionIncrement.y;
+                    directionIncrement = new Vector2Int(flipSign * tempY, flipSign * tempX);
+
+
+                }
+                else
+                    break;
+            }
+
+
+        } while ( X >= 0 && Y >= 0 && X < 4 && Y < 4);
+
+        return encounteredPiece;
     }
 
 }
