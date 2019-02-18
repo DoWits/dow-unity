@@ -269,3 +269,5 @@ C:\Users\Public\Documents\Unity Projects\Dow1\Temp\bin\Debug\UnityEngine.Spatial
 C:\Users\Public\Documents\Unity Projects\Dow1\obj\Debug\Assembly-CSharp.csproj.CopyComplete
 C:\Users\Public\Documents\Unity Projects\Dow1\obj\Debug\Assembly-CSharp.dll
 C:\Users\Public\Documents\Unity Projects\Dow1\obj\Debug\Assembly-CSharp.pdb
+C:\Users\Public\Documents\Unity Projects\Dow1\Temp\bin\Debug\UnityEngine.SpatialTrackingModule.dll
+C:\Users\Public\Documents\Unity Projects\Dow1\Temp\bin\Debug\UnityEngine.SpatialTrackingModule.xml

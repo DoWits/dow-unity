@@ -1,6 +1,6 @@
 Android
 PlayerPath?
-E:/Games
+E:/Games/DOW v1 app
 SceneListBegin?
 Assets/Board set.unity
 SceneListEnd?
@@ -124,7 +124,7 @@ e0ee4b3d4e27318934cc940a969d3d96 UnityEngine.Networking.dll:UnityEngine.Networki
 ad9173d3a69d99153f38ed4b62226129 UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransform
 9b895dcabbc1faf095c000c32d471fd0 UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransformChild
 5887ef1bc706b22b773d253fd443ceef UnityEngine.Networking.dll:UnityEngine.Networking.NetworkTransformVisualizer
-2120cbdfd25a23b7729d6429c427af1d Assembly-CSharp.dll:.PlayerPiece
+24dc2773b06f7926b5d8ae4f23f8cb06 Assembly-CSharp.dll:.PlayerPiece
 479146779fcf1c828d6925e604419c30 Assembly-CSharp.dll:.PieceManager
 cf96e5f7b3d069bab453925bd41be04e UnityEngine.TestRunner.dll:UnityEngine.TestTools.EnumerableSetUpTearDownCommandState
 71bb6a6b6c8f052f948db64c7dd3ca4f UnityEngine.TestRunner.dll:UnityEngine.TestTools.TestRunner.Callbacks.PlayModeRunnerCallback
@@ -141,5 +141,5 @@ fb6a1ea36b4f6ef5948d283d93760765 UnityEngine.GoogleAudioSpatializer.dll:UnityEng
 5b0391b7e3d9ea9db6c0a8fbd0ca23f6 UnityEngine.GoogleAudioSpatializer.dll:UnityEngine.Experimental.Audio.Google.GvrAudioSourceExtension
 d251bf88db6c95a6b1aa0b69298da9ef UnityEngine.SpatialTracking.dll:UnityEngine.SpatialTracking.TrackedPoseDriver
 cb109d6f4af61c03eca05314777c3591 Assembly-CSharp.dll:.Board
-239e9508dd65211118a51ed3124369a8 Assembly-CSharp.dll:.LaserScript
+fa20a9db51e1576dfaf9540cbf630ff9 Assembly-CSharp.dll:.LaserScript
 3d79e613e4e1ee1c4558e89106d4d628 Assembly-CSharp.dll:.Cell

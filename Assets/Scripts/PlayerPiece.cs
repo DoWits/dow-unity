@@ -10,11 +10,11 @@ public class PlayerPiece : BasePiece
     Button shootButton;
     ColorBlock enable;
     ColorBlock disable;
-    public LaserScript laserObject;
+    LaserScript laserObject;
 
     float increment = 0f;
 
-    public Vector3 GetLaserStartPoint()
+    Vector3 GetLaserDirection()
     {
         increment = 1f;
 
@@ -76,7 +76,7 @@ public class PlayerPiece : BasePiece
 
         laserObject = (LaserScript)this.gameObject.GetComponent("LaserScript");
 
-        laserObject.Setup(this);
+        //laserObject.Setup(this);
 
         shootButton = ShootButtonObject.GetComponent<Button>();
         shootButton.GetComponent<RectTransform>().position = new Vector3(0, -250, 0);
@@ -95,6 +95,9 @@ public class PlayerPiece : BasePiece
         mMovement = new Vector3Int(1, 1, 0);
         GetComponent<Image>().sprite = Resources.Load<Sprite>("R_Player");
 
+        //testing with colliders
+        CircleCollider2D edges = this.gameObject.AddComponent<CircleCollider2D>() as CircleCollider2D;
+        edges.radius = 15f;
 
 
         //Set orientation of Player2's image to down
@@ -115,7 +118,7 @@ public class PlayerPiece : BasePiece
 
     public override IEnumerator ShootingAnimation()
     {
-        return laserObject.ShootLaserFromPointAnimation(this.transform.position, GetLaserStartPoint(), this.mCurrentCell.mBoard, (BasePiece)this);
+        return laserObject.ShootLaserFromPointAnimation(this.transform.position, GetLaserDirection(), this.mCurrentCell.mBoard, (BasePiece)this);
     }
 
     public override void DisableShoot()

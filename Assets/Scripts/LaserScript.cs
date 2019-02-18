@@ -16,36 +16,79 @@ public class LaserScript : MonoBehaviour
     }
 
     // Update is called once per frame
-    
+ /*   
     public void Setup(BasePiece piece)
     {
-        this.piece = piece;
+       // this.piece = piece;
 
     }
-
+    */
 
     public IEnumerator ShootLaserFromPointAnimation(Vector3 position, Vector3 direction, Board board, BasePiece parent)
     {
-        int x = (int)((position.x / 50) + 3)/2;
-        int y = (int)((position.y / 50) + 3)/2;
-        Cell startCell = board.mAllCells[x, y];
+        GameObject laserEnd, laserStart, laserMiddle, laserStartExtenstion;
 
-
-        GameObject laserStart = Instantiate(laserStartPrefab);
+        //Put up the starting part of the laser
+        Quaternion rotation = parent.transform.rotation;
+         laserStart = Instantiate(laserStartPrefab);
         laserStart.transform.SetParent(parent.transform);
+        laserStart.transform.rotation = rotation;
 
-        if (piece.getOrientation().Equals("+1") || piece.getOrientation().Equals("-1"))
-            laserStart.transform.localPosition = position + 1f * direction;
+        //Create a little extenstion of the start
+        laserStartExtenstion = Instantiate(laserMiddlePrefab);
+        laserStartExtenstion.transform.SetParent(parent.transform);
+        laserStartExtenstion.transform.rotation = rotation;
+        int laserExtensionLength = 0;
+
+        
+        if (parent.getOrientation().Equals("+1") || parent.getOrientation().Equals("-1"))
+        {
+            laserStart.transform.position = position + 8f * direction;
+
+            laserStartExtenstion.transform.position = position + 13f * direction;
+            laserStartExtenstion.transform.localScale = new Vector3(20, 1, 0);
+            laserExtensionLength = 38;
+
+            float x = direction.x;
+            float y = direction.y;
+
+            if (x > 0)
+                rotation = Quaternion.Euler(0, 0, 270);
+            else if (x < 0)
+                rotation = Quaternion.Euler(0, 0, 90);
+            else if (y > 0)
+                rotation = Quaternion.Euler(0, 0, 0);
+            else if (y < 0)
+                rotation = Quaternion.Euler(0, 0, 180);
+            else
+                Debug.LogError("Faulty mirror rotation");
+
+            laserStart.transform.rotation = rotation;
+            laserStartExtenstion.transform.rotation = rotation; 
+
+        }
+
+        
         else
-            laserStart.transform.position = position +  35.1f * direction;
-        laserStart.transform.rotation = piece.transform.rotation;
+        {
+            laserStart.transform.position = position + 35.1f * direction;
+            laserStartExtenstion.transform.position = position + 40f * direction;
+            laserStartExtenstion.transform.localScale = new Vector3(20f, 1, 0);
+            laserExtensionLength = 10;
+            laserStartExtenstion.transform.rotation = parent.transform.rotation;
+
+
+        }
+        while (laserStartExtenstion.transform.localScale.y < laserExtensionLength)
+            yield return IncreaseLaser(direction, laserStartExtenstion);
 
 
 
-        GameObject laserMiddle = Instantiate(laserMiddlePrefab);
+
+        laserMiddle = Instantiate(laserMiddlePrefab);
         laserMiddle.transform.SetParent(parent.transform);
         laserMiddle.transform.position = position + 50f * direction;
-        laserMiddle.transform.rotation = piece.transform.rotation;
+        laserMiddle.transform.rotation = rotation;
         laserMiddle.transform.localScale = new Vector3(20, 1, 1);
 
 
@@ -68,26 +111,95 @@ public class LaserScript : MonoBehaviour
         int X = (int)direction.x;
         int Y = (int)direction.y;
 
+        //Collider2D collider = laserMiddle.GetComponent<Collider2D>();
 
-        while (laserMiddle.transform.localScale.y < 300f)
+
+        RaycastHit2D hit = Physics2D.Raycast(position + 65f * direction, direction, laserMiddle.transform.localScale.y);
+       
+        while (hit.collider==null)
         {
-            yield return IncreaseMiddle(direction, laserMiddle);
+            
+            yield return IncreaseLaser(direction, laserMiddle);
+            hit = Physics2D.Raycast(position + 65f * direction, direction, laserMiddle.transform.localScale.y);
 
         }
 
-        
+        GameObject laserTarget = hit.collider.transform.gameObject;
+        if(laserTarget.name.Contains("Manager"))
+        {
+            Debug.Log("Hit the edge");
+
+            laserEnd = Instantiate(laserEndPrefab);
+            laserEnd.transform.SetParent(parent.transform);
+            laserEnd.transform.localScale = new Vector3(25, 24.5f, 0);
+            laserEnd.transform.position = (Vector3)hit.point - 16f * direction;
+            laserEnd.transform.rotation = rotation;
+
+            while (laserEnd.transform.localScale.y < 25)
+                yield return IncreaseLaser(direction, laserEnd, 0.0125f);
+
+            if (laserEnd != null)
+                Destroy(laserEnd);
+        }
+        else if (laserTarget.name.Contains("M"))
+        {
+
+            GameObject laserEndAtMirror = Instantiate(laserStartPrefab);
+            laserEndAtMirror.transform.SetParent(parent.transform);
+            laserEndAtMirror.transform.localScale = new Vector3(20, 1, 0);
+            laserEndAtMirror.transform.position = hit.collider.transform.position - 24.5f*direction;
+            laserEndAtMirror.transform.rotation = rotation;
+            laserEndAtMirror.transform.Rotate(new Vector3(0, 0, 180));
+
+
+            while (laserEndAtMirror.transform.localScale.y < 25)
+                yield return IncreaseLaser(direction, laserEndAtMirror);
+
+
+            // put a yield return to MirrorPiece instead of the below
+            hit.collider.SendMessage("OnIncomingLaser",direction);
+
+            if (laserEndAtMirror != null)
+                Destroy(laserEndAtMirror);
+
+          //  LaserScript MirrorReflection = new LaserScript();
+          //  MirrorReflection.Setup((BasePiece)laserTarget);
+
+        }
+        else
+        {
+            laserEnd = Instantiate(laserEndPrefab);
+            laserEnd.transform.SetParent(parent.transform);
+            laserEnd.transform.localScale = new Vector3(25, 24f, 0);
+            laserEnd.transform.position = (Vector3)hit.point - 12f * direction;
+            laserEnd.transform.rotation = rotation;
+
+            while (laserEnd.transform.localScale.y < 25)
+                yield return IncreaseLaser(direction, laserEnd, 0.003125f);
+
+            if (laserEnd != null)
+                Destroy(laserEnd);
+
+            Debug.Log("Hit a player");
+        }
+
+      //  if(hit.collider.transform.parent. == )
+
+
         if (laserStart != null)
            Destroy(laserStart);
         if (laserMiddle != null)
            Destroy(laserMiddle);
+        if (laserStartExtenstion != null)
+            Destroy(laserStartExtenstion);
 
         yield return 0;
         
     }
-    public IEnumerator IncreaseMiddle(Vector3 increment, GameObject laserMiddle)
+    public IEnumerator IncreaseLaser(Vector3 increment, GameObject laser, float rate = 7)
     {
-        laserMiddle.transform.localScale += new Vector3(0,1,0)*5f ;
-        laserMiddle.transform.position += increment*2.5f;
+        laser.transform.localScale += new Vector3(0,1,0)*rate ;
+        laser.transform.position += increment*rate/2;
         yield return 0;
     }
 

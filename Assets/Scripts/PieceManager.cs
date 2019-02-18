@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 
@@ -10,6 +11,8 @@ public class PieceManager : MonoBehaviour
 {
     //List of Mirrors and Players
 
+
+    private EdgeCollider2D edges;
     private List<BasePiece> mMirrors = null;
     private Board mBoard;
     private int mTotalMirrors = 4;
@@ -45,9 +48,26 @@ public class PieceManager : MonoBehaviour
         {"-1", typeof(MirrorPiece) }
     };
 
+
+
+
     public void Setup(Board board, List<BasePiece> allPieces)
     {
+
+
         mBoard = board;
+
+        edges =  this.gameObject.AddComponent<EdgeCollider2D>() as EdgeCollider2D;
+
+        edges.points = new Vector2[]
+        {
+            new Vector2(-215f,-215f),
+            new Vector2(-215f, 215f),
+            new Vector2( 215f, 215f),
+            new Vector2( 215f,-215f),
+            new Vector2(-215f,-215f),
+        };
+
 
         mPlayer1 = CreatePlayer("up", Color.white, new Color32(80, 124, 159, 255), board, "P1");
         mPlayer2 = CreatePlayer("down", Color.black, new Color32(210, 95, 64, 255), board, "P2");
@@ -258,6 +278,11 @@ public class PieceManager : MonoBehaviour
         } while ( X >= 0 && Y >= 0 && X < 4 && Y < 4);
 
         return encounteredPiece;
+    }
+
+    public void ResetGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
 }

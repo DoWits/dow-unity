@@ -330,10 +330,15 @@ public abstract class BasePiece : EventTrigger
             p1.mOrientation);
 
         if (shotPlayer == p1)
+        {
             Debug.Log(p2.name + " Wins");
+            mPieceManager.ResetGame();
+        }
         else if (shotPlayer == p2)
+        {
             Debug.Log(p1.name + " Wins");
-
+            mPieceManager.ResetGame();
+        }
         foreach (BasePiece piece in mPieceManager.mAllPieces)
         {
             piece.mLockMovement = (false);
