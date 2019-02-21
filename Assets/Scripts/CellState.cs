@@ -17,7 +17,7 @@ public class CellState
     public PieceState getPieceState() { return pieceState; }
     public void setPieceState(PieceState pieceState) { this.pieceState = pieceState; }
 
-    public void printCellState()
+    public void PrintCellState()
     {
         Debug.Log("Piece Name: " + pieceState.getPieceName());
         Debug.Log("Piece Row: " + pieceState.getPieceRow());

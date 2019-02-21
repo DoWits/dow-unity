@@ -58,4 +58,10 @@
         this.col = col;
         this.orientation = orientation;
     }
+
+    public bool pieceExists()
+    {
+        if (pieceName == '1' || pieceName == '2' || pieceName == 'M') return true;
+        return false;
+    }
 }

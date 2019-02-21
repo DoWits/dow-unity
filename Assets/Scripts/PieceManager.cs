@@ -324,11 +324,18 @@ public class PieceManager : MonoBehaviour
         int currentRow = currCellPos.y;
 
         int orientation = gameStateOrientationConventions[updatedPiece.getOrientation()];
+        char pieceName = gameStatePieceConventions[updatedPiece.gameObject.name];
 
-        // Debug.Log("GAME STATE OF NEW CELL BEFORE UPDATION");
-        // gameState.getCellState(prevX, prevY).printCellState();
-        // gameState.getCellState(currentRow, currentCol).printCellState();
+        // updating if last mirror moved or set to null
+        if(pieceName.Equals('M'))
+        {
+            gameState.setLastMirrorMoved(new PieceState('M', currentRow, currentCol, orientation));
+        } else
+        {
+            gameState.setLastMirrorMoved(null);
+        }
 
+        // updating cells
         if (prevCellPos.Equals(currCellPos))
         {
             // update orienation only even if it just shoots
@@ -344,17 +351,13 @@ public class PieceManager : MonoBehaviour
             gameState.getCellState(prevRow, prevCol).getPieceState().setNullState();
 
             // current cell
-            char pieceName = gameStatePieceConventions[updatedPiece.gameObject.name];
+            
             CellState cellState = gameState.getCellState(currentRow, currentCol);
             PieceState pieceState = cellState.getPieceState();
             pieceState.updatePieceState(pieceName, currentRow, currentCol, orientation);
 
         }
 
-        // debugging purposes
-        // Debug.Log("GAME STATE OF NEW CELL AFTER UPDATION");
-        // gameState.getCellState(prevX, prevY).printCellState();
-        // gameState.getCellState(currentRow, currentCol).printCellState();
         gameState.changeCurrentTurn();
         // check for goal state
     }
