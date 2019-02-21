@@ -15,6 +15,8 @@ public class Cell : MonoBehaviour
 
     public BasePiece mCurrentPiece = null;
 
+
+
     // Start is called before the first frame update
     public void Setup(Vector2Int newBoardPosition, Board newBoard)
     {
@@ -39,6 +41,6 @@ public class Cell : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 }
