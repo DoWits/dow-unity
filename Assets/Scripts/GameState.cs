@@ -4,13 +4,23 @@ public class GameState
 {
     public CellState[,] allBoardCells;
     public PieceState lastMirrorMoved;
-    public bool currentTurn; // Player 1(True) | Player 2 (False)
+    public bool currentTurn; // Player 1(True) | Player 2(False)
     public List<PieceState> allPieces;
+    public int boardSize;
 
     public GameState()
     {
-
-        allBoardCells = new CellState[4, 4];
+        boardSize = 4;
+        allBoardCells = new CellState[boardSize, boardSize];
+        for (int row=0;row<boardSize;row++)
+        {
+            for(int col=0;col<boardSize;col++)
+            {
+                // TODO: Need to rethink about default orientation when no piece is there for now it is -1
+                allBoardCells[row, col] = new CellState(new PieceState(' ', row, col, -1));
+            }
+        }
+        
         allPieces = new List<PieceState>();
 
         CellState tempCell;
@@ -66,5 +76,7 @@ public class GameState
     }
 
     public CellState[,] getAllBoardCells() { return allBoardCells; }
-    
+
+    public CellState getCellState(int r, int c) { return allBoardCells[r, c]; }
+
 }

@@ -48,6 +48,26 @@ public class PieceManager : MonoBehaviour
         {"-1", typeof(MirrorPiece) }
     };
 
+    private Dictionary<string, char> gameStatePieceConventions = new Dictionary<string, char>()
+    {
+        {"P1", '1' },
+        {"P2", '2' },
+        {"M1", 'M' },
+        {"M2", 'M' },
+        {"M3", 'M' },
+        {"M4", 'M' },
+    };
+
+    private Dictionary<string, int> gameStateOrientationConventions = new Dictionary<string, int>()
+    {
+        {"up", 0 },
+        {"right", 1 },
+        {"down", 2 },
+        {"left", 3 },
+        {"-1", -1 },
+        {"+1", 1 },
+    };
+
     GameState gameState;
 
 
@@ -290,6 +310,53 @@ public class PieceManager : MonoBehaviour
     public void UpdateGameState(BasePiece updatedPiece, Cell previousCell, Cell currentCell, string action)
     {
 
+        // Debug.Log("The updatedPiece name: " + updatedPiece.gameObject.name);
+        // Debug.Log("Action peformed is " + action);
+        // TODO: action string is never used, can be removed later
+        Vector2Int prevCellPos, currCellPos;
+
+        prevCellPos = previousCell.GetCellPosition();
+        int prevCol = prevCellPos.x;
+        int prevRow = prevCellPos.y;
+
+        currCellPos = currentCell.GetCellPosition();
+        int currentCol = currCellPos.x;
+        int currentRow = currCellPos.y;
+
+        int orientation = gameStateOrientationConventions[updatedPiece.getOrientation()];
+
+        // Debug.Log("GAME STATE OF NEW CELL BEFORE UPDATION");
+        // gameState.getCellState(prevX, prevY).printCellState();
+        // gameState.getCellState(currentRow, currentCol).printCellState();
+
+        if (prevCellPos.Equals(currCellPos))
+        {
+            // update orienation only even if it just shoots
+            gameState.getCellState(prevRow, prevCol).getPieceState().setPieceOrientation(orientation);
+        } else
+        {
+            /* update the piece position
+             * 1. previous cell to null
+             * 2. current cell will now have the piece with the same orientation
+             */
+
+            // previous cell
+            gameState.getCellState(prevRow, prevCol).getPieceState().setNullState();
+
+            // current cell
+            char pieceName = gameStatePieceConventions[updatedPiece.gameObject.name];
+            CellState cellState = gameState.getCellState(currentRow, currentCol);
+            PieceState pieceState = cellState.getPieceState();
+            pieceState.updatePieceState(pieceName, currentRow, currentCol, orientation);
+
+        }
+
+        // debugging purposes
+        // Debug.Log("GAME STATE OF NEW CELL AFTER UPDATION");
+        // gameState.getCellState(prevX, prevY).printCellState();
+        // gameState.getCellState(currentRow, currentCol).printCellState();
+        gameState.changeCurrentTurn();
+        // check for goal state
     }
 
 

@@ -42,5 +42,20 @@
     public void setPieceRow(int row) { this.row = row; }
     public void setPieceCol(int col) { this.col = col; }
     public void setPieceOrientation(int orientation) { this.orientation = orientation; }
-   
+
+    public void setNullState()
+    {
+        pieceName = ' ';
+        row = -1;
+        col = -1;
+        orientation = -1;
+    }
+
+    public void updatePieceState(char pieceName, int row, int col, int orientation)
+    {
+        this.pieceName = pieceName;
+        this.row = row;
+        this.col = col;
+        this.orientation = orientation;
+    }
 }
