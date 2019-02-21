@@ -4,11 +4,12 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 
-
 //TODO : Check if we need to seperate the BasePieces into PlayerPiece and MirrorPiece
 
 public class PieceManager : MonoBehaviour
 {
+    
+    
     //List of Mirrors and Players
 
 
@@ -48,7 +49,7 @@ public class PieceManager : MonoBehaviour
         {"-1", typeof(MirrorPiece) }
     };
 
-
+    GameState gameState;
 
 
     public void Setup(Board board, List<BasePiece> allPieces)
@@ -83,6 +84,8 @@ public class PieceManager : MonoBehaviour
         allPieces.AddRange(mMirrors);
 
         mAllPieces = allPieces;
+
+        gameState = new GameState();
 
     }
 
@@ -280,9 +283,19 @@ public class PieceManager : MonoBehaviour
         return encounteredPiece;
     }
 
-    public void ResetGame()
+    public void UpdateGameState(BasePiece updatedPiece, Cell previousCell, Cell currentCell, string action)
+    {
+        // change current turn
+        // update piece currentCell and Target cell
+        // orientation change
+
+        Debug.Log("The Action is " + action);
+
+    }
+
+
+public void ResetGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
-
 }

@@ -15,7 +15,7 @@ public abstract class BasePiece : EventTrigger
     protected string mOrientation = "";
     protected Button[] mButtons;
     protected Vector3Int mMovement = new Vector3Int(1, 1, 0);
-    //This variable is for Locking the Piece's movement 
+    //This variable is for Locking the Piece's movement
     protected bool mLockMovement = false;
     protected bool mMouseSelected = false;
     protected PlayerButtons mPlayerButtons = null;
@@ -36,7 +36,7 @@ public abstract class BasePiece : EventTrigger
         ClearButtons();
 
         mPieceManager = newPieceManager;
-       
+
         mColor = newTeamColor;
         GetComponent<Image>().color = newSpriteColor;
         mRectTransform = GetComponent<RectTransform>();
@@ -47,7 +47,7 @@ public abstract class BasePiece : EventTrigger
     public string getOrientation()
     { return mOrientation; }
 
-  
+
 
     public void Place(Cell newCell)
     {
@@ -64,7 +64,7 @@ public abstract class BasePiece : EventTrigger
         gameObject.SetActive(true);
     }
 
-    
+
 
     public void ShowButtons()
     {
@@ -103,7 +103,7 @@ public abstract class BasePiece : EventTrigger
                 //Skip the destination being out of the board
                 if (targetY < 0 || targetY > 3)
                     continue;
-                // Skip if the destination already has a piece. 
+                // Skip if the destination already has a piece.
                 if (mCurrentCell.mBoard.mAllCells[targetX, targetY].mCurrentPiece != null)
                     continue;
 
@@ -119,13 +119,13 @@ public abstract class BasePiece : EventTrigger
                 }
                 else if (x == 0 && y == 1)
                 {
-                    mPlayerButtons.Show("Move Up");                   
+                    mPlayerButtons.Show("Move Up");
                 }
                 else if (x == 0 && y == -1)
                 {
                     mPlayerButtons.Show("Move Down");
                 }
-               
+
             }
         }
 
@@ -162,7 +162,7 @@ public abstract class BasePiece : EventTrigger
 
     }
 
-    
+
 
     public virtual void ChangeTurn()
     { }
@@ -180,14 +180,14 @@ public abstract class BasePiece : EventTrigger
     {
 
 
-        yield return 0; 
+        yield return 0;
     }
 
 
     public virtual IEnumerator MovePieceRoutine(BasePiece currentPiece, string buttonName)
     {
-        BasePiece 
-            p1 = null, 
+        BasePiece
+            p1 = null,
             p2 = null;
 
         Cell currentCell = currentPiece.mCurrentCell;
@@ -209,7 +209,7 @@ public abstract class BasePiece : EventTrigger
             }
             piece.mLockMovement = true;
             piece.ClearButtons();
-            
+
         }
         //disable the shoot buttons so that p2 can't press it during the animation
         p1.DisableShoot();
@@ -228,7 +228,7 @@ public abstract class BasePiece : EventTrigger
         {
             Quaternion initialRotation = currentPiece.transform.rotation;
             float targetRotation = 90f;
-            
+
             while(Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
                 yield return RotateAnimation(currentPiece, targetRotation);
 
@@ -308,7 +308,7 @@ public abstract class BasePiece : EventTrigger
         Vector3 distanceToTravel = targetCell.transform.position - currentPiece.transform.position;
         while (currentPiece.transform.position != targetCell.transform.position)
         {
-            
+
             yield return MoveAnimation(currentPiece, distanceToTravel);
         }
 
@@ -317,7 +317,8 @@ public abstract class BasePiece : EventTrigger
         currentCell.mCurrentPiece = null;
         targetCell.mCurrentPiece = currentPiece;
 
-
+        mPieceManager.UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
+        
         yield return p1.ShootingAnimation();
 
         /*
@@ -325,7 +326,7 @@ public abstract class BasePiece : EventTrigger
          */
 
         BasePiece shotPlayer = mPieceManager.GetPlayerIfShot(
-            p1.mCurrentCell.GetCellPosition().x, 
+            p1.mCurrentCell.GetCellPosition().x,
             p1.mCurrentCell.GetCellPosition().y,
             p1.mOrientation);
 
@@ -333,11 +334,13 @@ public abstract class BasePiece : EventTrigger
         {
             Debug.Log(p2.name + " Wins");
             mPieceManager.ResetGame();
+            yield return 0;
         }
         else if (shotPlayer == p2)
         {
             Debug.Log(p1.name + " Wins");
             mPieceManager.ResetGame();
+            yield return 0;
         }
         foreach (BasePiece piece in mPieceManager.mAllPieces)
         {
@@ -363,7 +366,7 @@ public abstract class BasePiece : EventTrigger
     public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
     {
         mPiece.transform.rotation *= Quaternion.Euler(0, 0, targetRotation / 10);
-        
+
         yield return 0;
     }
 
@@ -374,7 +377,7 @@ public abstract class BasePiece : EventTrigger
 
         yield return 0;
     }
-    
 
-   
+
+
 }

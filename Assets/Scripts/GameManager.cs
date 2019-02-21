@@ -6,6 +6,8 @@ public class GameManager : MonoBehaviour
 
     public Board mBoard;
 
+    // variable for game mode (Player vs Player, Player vs AI, AI vs AI)
+
     public PieceManager mPieceManager;
 
     public List<BasePiece> mPieces = null;
@@ -15,7 +17,6 @@ public class GameManager : MonoBehaviour
     {
 
         QualitySettings.vSyncCount = 1;
-
 
         Camera.main.orthographicSize = 400;
         //Create the Board
@@ -28,6 +29,6 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }
