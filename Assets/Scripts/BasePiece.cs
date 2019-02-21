@@ -317,6 +317,7 @@ public abstract class BasePiece : EventTrigger
         currentCell.mCurrentPiece = null;
         targetCell.mCurrentPiece = currentPiece;
 
+        mPieceManager.UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
 
         yield return p1.ShootingAnimation();
 

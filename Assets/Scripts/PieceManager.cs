@@ -48,7 +48,7 @@ public class PieceManager : MonoBehaviour
         {"-1", typeof(MirrorPiece) }
     };
 
-
+    GameState gameState;
 
 
     public void Setup(Board board, List<BasePiece> allPieces)
@@ -83,6 +83,8 @@ public class PieceManager : MonoBehaviour
         allPieces.AddRange(mMirrors);
 
         mAllPieces = allPieces;
+
+        gameState = new GameState();
 
     }
 
@@ -284,5 +286,11 @@ public class PieceManager : MonoBehaviour
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
+
+    public void UpdateGameState(BasePiece updatedPiece, Cell previousCell, Cell currentCell, string action)
+    {
+
+    }
+
 
 }
