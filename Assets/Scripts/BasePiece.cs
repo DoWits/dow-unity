@@ -333,13 +333,16 @@ public abstract class BasePiece : EventTrigger
         if (shotPlayer == p1)
         {
             Debug.Log(p2.name + " Wins");
+            mPieceManager.UpdateWinState(p2, p2.mCurrentCell.GetCellPosition().y, p2.mCurrentCell.GetCellPosition().x);
             mPieceManager.ResetGame();
         }
         else if (shotPlayer == p2)
         {
             Debug.Log(p1.name + " Wins");
+            mPieceManager.UpdateWinState(p1, p1.mCurrentCell.GetCellPosition().y, p1.mCurrentCell.GetCellPosition().x);
             mPieceManager.ResetGame();
-        }
+        } else { /* do nothing*/ }
+
         foreach (BasePiece piece in mPieceManager.mAllPieces)
         {
             piece.mLockMovement = (false);

@@ -6,6 +6,10 @@ public class GameState
     public PieceState lastMirrorMoved;
     public bool currentTurn; // Player 1(True) | Player 2(False)
     public List<PieceState> allPieces;
+    public int numOfMoves;
+    public List<GameState> availableGameStates;
+    public PieceState winningPiece;
+    public bool winningState;
 
     public GameState()
     {
@@ -62,10 +66,12 @@ public class GameState
 
         currentTurn = true;
         lastMirrorMoved = null;
-
+        numOfMoves = 0;
+        winningPiece = null;
+        winningState = false;
     }
 
-    public bool getCurrentTurn() { return currentTurn; }
+    public bool isCurrentTurn() { return currentTurn; }
     public void changeCurrentTurn() { this.currentTurn = !this.currentTurn; }
 
     public PieceState getLastMirrorMoved() { return lastMirrorMoved; }
@@ -80,4 +86,27 @@ public class GameState
 
     public CellState getCellState(int r, int c) { return allBoardCells[r, c]; }
 
+    public void incrementNumOfMoves() { this.numOfMoves = this.numOfMoves + 1; }
+
+    // methods for winning state
+    public void gameWon(PieceState piece)
+    {
+        winningState = true;
+        winningPiece = piece;
+    }
+
+    public bool isWon() { return winningState; }
+
+    public bool ReachedWinningState()
+    {
+
+        return true;
+    }
+
+    public List<GameState> GetAvailableMoveStates()
+    {
+        List<GameState> availableMoveStates = new List<GameState>();
+
+        return availableMoveStates;
+    }
 }

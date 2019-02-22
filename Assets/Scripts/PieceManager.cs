@@ -64,7 +64,7 @@ public class PieceManager : MonoBehaviour
         {"right", 1 },
         {"down", 2 },
         {"left", 3 },
-        {"-1", -1 },
+        {"-1", 0 },
         {"+1", 1 },
     };
 
@@ -359,8 +359,49 @@ public class PieceManager : MonoBehaviour
         }
 
         gameState.changeCurrentTurn();
-        // check for goal state
+        gameState.incrementNumOfMoves();
     }
 
+    public void UpdateWinState(BasePiece winningPiece, int row, int col)
+    {
+        char pieceName = gameStatePieceConventions[winningPiece.gameObject.name];
+        int orientation = gameStateOrientationConventions[winningPiece.getOrientation()];
+        gameState.gameWon(new PieceState(pieceName, row, col, orientation));
+    }
+
+    public void computerMove()
+    {
+
+    }
+
+    public List<GameState> alphaBetaPrune()
+    {
+        List<GameState> bestMoves = new List<GameState>();
+        List<GameState> min;
+        List<GameState> max;
+
+        return bestMoves;
+    }
+
+    private int heuristic(GameState gameState)
+    {
+        int cost = 0;
+        if (subHeuristic(gameState, true) == 0)
+            cost = -100000;
+        else
+            cost = subHeuristic(gameState, true) - subHeuristic(gameState, false);
+        return cost;
+    }
+
+    public int subHeuristic(GameState gameState, bool opponent)
+    {
+        int cost = 0;
+
+
+
+        return cost;
+    }
+
+    public GameState getGameState() { return gameState; }
 
 }

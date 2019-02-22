@@ -5,12 +5,13 @@
     int col;
     int orientation;
     /*
-     * For mirrors: -1 is \ and +1 is /
+     * For mirrors: 0 is \ and +1 is /
      * For players: 0-Up, 1-Right, 2-Down, 3-Left
      */
 
     public PieceState()
     {
+        // TODO: Need to rethink about default orientation when no piece is there for now it is -1
         pieceName = ' ';
         row = -1;
         col = -1;
@@ -45,6 +46,7 @@
 
     public void setNullState()
     {
+        // TODO: Need to rethink about default orientation when no piece is there for now it is -1
         pieceName = ' ';
         row = -1;
         col = -1;
