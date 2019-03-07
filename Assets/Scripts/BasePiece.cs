@@ -9,19 +9,51 @@ public abstract class BasePiece : EventTrigger
 {
     public GameObject ShootButtonObject;
     public Color mColor = Color.clear;
-    protected Cell mCurrentCell = null;
+   
     protected RectTransform mRectTransform = null;
     protected PieceManager mPieceManager;
-    protected string mOrientation = "";
+   
     protected Button[] mButtons;
     protected Vector3Int mMovement = new Vector3Int(1, 1, 0);
     //This variable is for Locking the Piece's movement 
-    protected bool mLockMovement = false;
     protected bool mMouseSelected = false;
-    protected PlayerButtons mPlayerButtons = null;
+    //TODO : change the below back to protected during clean-up 
+    public Cell mCurrentCell = null;
+    public string mOrientation = "";
+    public bool mLockMovement = false;
+    public bool doneShooting = true;
+    public PlayerButtons mPlayerButtons = null;
+    public GameObject mPieceButtons = null;
 
 
-    GameObject mPieceButtons = null;
+
+
+    public bool IsDoneShooting()
+    {
+        return doneShooting;
+    }
+
+    public bool IsAllDoneShooting()
+    {
+        List<BasePiece> AllPieces = mPieceManager.mAllPieces;
+        foreach(BasePiece piece in AllPieces)
+        {
+            if (!piece.IsDoneShooting())
+                return false;
+        }
+        return true;
+    }
+
+
+    public void ResetShooting()
+    {
+        doneShooting = true;
+    }
+
+
+
+
+    
     public virtual void Setup(string orientation, Color newTeamColor, Color32 newSpriteColor, PieceManager newPieceManager, GameObject pieceButtons, PlayerButtons playerButtons)
     {
 
@@ -31,7 +63,7 @@ public abstract class BasePiece : EventTrigger
         string s = base.name;
 
         foreach (Button b in mButtons)
-            b.onClick.AddListener(() => MovePiece(this, b.name));
+            b.onClick.AddListener( () => MovePiece(this, b.name));
 
         ClearButtons();
 
@@ -171,213 +203,29 @@ public abstract class BasePiece : EventTrigger
 
     public virtual void MovePiece(BasePiece currentPiece, string buttonName)
     {
-        IEnumerator coroutine = MovePieceRoutine(currentPiece, buttonName);
+        IEnumerator coroutine = mPieceManager.MovePieceCoroutine(currentPiece, buttonName);
         StartCoroutine(coroutine);
+
+
     }
 
 
     public virtual IEnumerator ShootingAnimation()
     {
 
-
-        yield return 0; 
+        yield return false;
+      //  yield return null; 
     }
-
-
-    public virtual IEnumerator MovePieceRoutine(BasePiece currentPiece, string buttonName)
-    {
-        BasePiece 
-            p1 = null, 
-            p2 = null;
-
-        Cell currentCell = currentPiece.mCurrentCell;
-        Cell targetCell = currentCell;
-        //Set all peices as Locked
-        foreach (BasePiece piece in mPieceManager.mAllPieces)
-        {
-
-
-            if (piece.mOrientation.Equals("left") || piece.mOrientation.Equals("up") || piece.mOrientation.Equals("down") || piece.mOrientation.Equals("right"))
-            {
-                //It's not this player's turn
-                if (piece.mLockMovement)
-                    p2 = piece;
-                //It is this player's turn
-                else
-                    p1 = piece;
-
-            }
-            piece.mLockMovement = true;
-            piece.ClearButtons();
-            
-        }
-        //disable the shoot buttons so that p2 can't press it during the animation
-        p1.DisableShoot();
-
-        string playerName = p1.gameObject.name;
-        string pieceName = currentPiece.gameObject.name;
-
-        Debug.Log(playerName + " : " + pieceName + " " + buttonName);
-
-        int x, y;
-        x = currentCell.mBoardPosition.x;
-        y = currentCell.mBoardPosition.y;
-
-        //Move the required piece
-        if (buttonName.Equals("Rotate Left"))
-        {
-            Quaternion initialRotation = currentPiece.transform.rotation;
-            float targetRotation = 90f;
-            
-            while(Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
-                yield return RotateAnimation(currentPiece, targetRotation);
-
-            //Change the orientation of the piece
-
-            if (currentPiece.mOrientation.Equals("up"))
-                currentPiece.mOrientation = "left";
-            else if (currentPiece.mOrientation.Equals("left"))
-                currentPiece.mOrientation = "down";
-            else if (currentPiece.mOrientation.Equals("down"))
-                currentPiece.mOrientation = "right";
-            else if (currentPiece.mOrientation.Equals("right"))
-                currentPiece.mOrientation = "up";
-            else if (currentPiece.mOrientation.Equals("+1"))
-                currentPiece.mOrientation = "-1";
-            else
-                currentPiece.mOrientation = "+1";
-
-
-
-        }
-        else if (buttonName.Equals("Rotate Right"))
-        {
-
-            Quaternion initialRotation = currentPiece.transform.rotation;
-            float targetRotation = -90f;
-
-            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
-                yield return RotateAnimation(currentPiece, targetRotation);
-
-            //Change the orientation of the piece
-
-            if (currentPiece.mOrientation.Equals("left"))
-                currentPiece.mOrientation = "up";
-            else if (currentPiece.mOrientation.Equals("down"))
-                currentPiece.mOrientation = "left";
-            else if (currentPiece.mOrientation.Equals("right"))
-                currentPiece.mOrientation = "down";
-            else if(currentPiece.mOrientation.Equals("up"))
-                currentPiece.mOrientation = "right";
-            else if (currentPiece.mOrientation.Equals("+1"))
-                currentPiece.mOrientation = "-1";
-            else
-                currentPiece.mOrientation = "+1";
-        }
-        else if (buttonName.Equals("Move Up"))
-        {
-            //get the current cell of the piece
-            //set the current cell to the new cell
-            //set the position of the piece as the new Cell
-
-            y = y + 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-        }
-        else if (buttonName.Equals("Move Down"))
-        {
-            y = y - 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
-
-        }
-        else if (buttonName.Equals("Move Left"))
-        {
-            x = x - 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
-
-        }
-        else if (buttonName.Equals("Move Right"))
-        {
-            x = x + 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
-        }
-
-        currentPiece.mCurrentCell = targetCell;
-        Vector3 distanceToTravel = targetCell.transform.position - currentPiece.transform.position;
-        while (currentPiece.transform.position != targetCell.transform.position)
-        {
-            
-            yield return MoveAnimation(currentPiece, distanceToTravel);
-        }
-
-
-        currentPiece.mPieceButtons.transform.position = targetCell.transform.position;
-        currentCell.mCurrentPiece = null;
-        targetCell.mCurrentPiece = currentPiece;
-
-        mPieceManager.UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
-
-        yield return p1.ShootingAnimation();
-
-        /*
-         * After the shootanimation, call a piecemanagaer function that makes checks if anyone was shot
-         */
-
-        BasePiece shotPlayer = mPieceManager.GetPlayerIfShot(
-            p1.mCurrentCell.GetCellPosition().x, 
-            p1.mCurrentCell.GetCellPosition().y,
-            p1.mOrientation);
-
-        if (shotPlayer == p1)
-        {
-            Debug.Log(p2.name + " Wins");
-            mPieceManager.UpdateWinState(p2, p2.mCurrentCell.GetCellPosition().y, p2.mCurrentCell.GetCellPosition().x);
-            mPieceManager.ResetGame();
-        }
-        else if (shotPlayer == p2)
-        {
-            Debug.Log(p1.name + " Wins");
-            mPieceManager.UpdateWinState(p1, p1.mCurrentCell.GetCellPosition().y, p1.mCurrentCell.GetCellPosition().x);
-            mPieceManager.ResetGame();
-        } else { /* do nothing*/ }
-
-        foreach (BasePiece piece in mPieceManager.mAllPieces)
-        {
-            piece.mLockMovement = (false);
-            piece.ClearButtons();
-        }
-
-        if (currentPiece != p1 && currentPiece != p2)
-            currentPiece.mLockMovement = true;
-
-          p2.mLockMovement = (true);
-          p1.mLockMovement = (false);
-
-
-
-        //Change turns for both players
-        p1.ChangeTurn();
-        p2.ChangeTurn();
-
-
-    }
-
-    public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
-    {
-        mPiece.transform.rotation *= Quaternion.Euler(0, 0, targetRotation / 10);
-        
-        yield return 0;
-    }
-
-    public IEnumerator MoveAnimation(BasePiece currentPiece, Vector3 distanceToTravel)
+    public virtual IEnumerator ShootingAnimation(Vector3 direction)
     {
 
-        currentPiece.transform.position = currentPiece.transform.position + (distanceToTravel / 10);//, ref vel, smoothTime);
-
-        yield return 0;
+        yield return false;
+        //  yield return null; 
     }
+
+    
+
+   
     
 
    

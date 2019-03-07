@@ -80,7 +80,7 @@ public class PlayerPiece : BasePiece
 
         shootButton = ShootButtonObject.GetComponent<Button>();
         shootButton.GetComponent<RectTransform>().position = new Vector3(0, -250, 0);
-        shootButton.onClick.AddListener(() => MovePiece(this, "Shoot"));
+        shootButton.onClick.AddListener( () =>  MovePiece(this, "Shoot"));
         enable = shootButton.colors;
         disable = shootButton.colors;
 
@@ -118,7 +118,16 @@ public class PlayerPiece : BasePiece
 
     public override IEnumerator ShootingAnimation()
     {
-        return laserObject.ShootLaserFromPointAnimation(this.transform.position, GetLaserDirection(), this.mCurrentCell.mBoard, (BasePiece)this);
+        while (laserObject.IsDoneShooting() == false)
+            yield return laserObject.ShootLaserFromPointAnimation(this.transform.position, GetLaserDirection(), this.mCurrentCell.mBoard, (BasePiece)this);
+
+        doneShooting = true;
+
+
+        laserObject.ResetShooting();
+
+        yield return new WaitUntil(() => IsAllDoneShooting());
+
     }
 
     public override void DisableShoot()

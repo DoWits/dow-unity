@@ -2,7 +2,7 @@
 
 public class CellState
 {
-    PieceState pieceState;
+    PieceState pieceState = null;
 
     public CellState()
     {

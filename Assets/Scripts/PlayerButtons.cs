@@ -29,6 +29,17 @@ public class PlayerButtons : MonoBehaviour
     }
 
 
+    public void RotateButtons()
+    {
+        foreach (Button b in mButtons)
+        {
+            if (b.name.Contains("Rotate"))
+            { b.gameObject.transform.Rotate(new Vector3(0, 0, 180));
+                b.gameObject.transform.localPosition = -1 * b.gameObject.transform.localPosition;
+            }
+        }
+    }
+
 
     //get the specific button to show
     public void Show(string buttonName)

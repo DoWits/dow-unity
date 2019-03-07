@@ -6,6 +6,7 @@ using UnityEngine.UI;
 
 public class MirrorPiece : BasePiece
 {
+
     LaserScript laserObject;
     Vector3 laserDirection = Vector3.zero;
 
@@ -52,8 +53,12 @@ public class MirrorPiece : BasePiece
     }
 
     //Call this funtion if there is an incoming laser
-    private void OnIncomingLaser(Vector3 incomingLaserDirection)
+   
+    
+
+    public override IEnumerator ShootingAnimation(Vector3 incomingLaserDirection)
     {
+        doneShooting = false;
         int multiplier = 1;
 
         if (this.mOrientation.Equals("+1"))
@@ -74,14 +79,12 @@ public class MirrorPiece : BasePiece
 
         Debug.Log("Collision at mirror detected");
 
-        StartCoroutine(ShootingAnimation());
+        while (laserObject.IsDoneShooting() == false)
+        { yield return laserObject.ShootLaserFromPointAnimation(this.transform.position, laserDirection, this.mCurrentCell.mBoard, (BasePiece)this); }
 
-    }
-    
+        laserObject.ResetShooting();
+        doneShooting = true;
 
-    public override IEnumerator ShootingAnimation()
-    {
-        return laserObject.ShootLaserFromPointAnimation(this.transform.position, laserDirection, this.mCurrentCell.mBoard, (BasePiece)this);
     }
 
 

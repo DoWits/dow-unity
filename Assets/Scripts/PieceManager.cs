@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -13,6 +14,7 @@ public class PieceManager : MonoBehaviour
 
 
     private EdgeCollider2D edges;
+    private string mGameMode = "PvP";
     private List<BasePiece> mMirrors = null;
     private Board mBoard;
     private int mTotalMirrors = 4;
@@ -68,10 +70,10 @@ public class PieceManager : MonoBehaviour
         {"+1", 1 },
     };
 
-    GameState gameState;
+    GameState mainGameState;
 
 
-    public void Setup(Board board, List<BasePiece> allPieces)
+    public void Setup(Board board, List<BasePiece> allPieces, string GameMode)
     {
 
 
@@ -104,7 +106,7 @@ public class PieceManager : MonoBehaviour
 
         mAllPieces = allPieces;
 
-        gameState = new GameState();
+        mainGameState = new GameState();
 
     }
 
@@ -302,79 +304,253 @@ public class PieceManager : MonoBehaviour
         return encounteredPiece;
     }
 
+
+    public void GameStateToButton(GameState initialGameState, GameState finalGameState)
+    {
+        BasePiece changedPiece = null;
+        string buttonName = "";
+        if (initialGameState == finalGameState)
+            buttonName = "Shoot";
+        else
+        {
+
+
+
+        }
+
+        changedPiece.MovePiece(changedPiece, buttonName);
+        
+    }
+
+
+
+    public  IEnumerator MovePieceCoroutine(BasePiece currentPiece, string buttonName)
+    {
+        BasePiece
+            p1 = null,
+            p2 = null;
+
+        Cell currentCell = currentPiece.mCurrentCell;
+        Cell targetCell = currentCell;
+        //Set all peices as Locked
+        foreach (BasePiece piece in mAllPieces)
+        {
+
+
+            if (piece.mOrientation.Equals("left") || piece.mOrientation.Equals("up") || piece.mOrientation.Equals("down") || piece.mOrientation.Equals("right"))
+            {
+                //It's not this player's turn
+                if (piece.mLockMovement)
+                    p2 = piece;
+                //It is this player's turn
+                else
+                    p1 = piece;
+
+            }
+            piece.mLockMovement = true;
+            piece.ClearButtons();
+
+        }
+        //disable the shoot buttons so that p2 can't press it during the animation
+        p1.DisableShoot();
+
+        string playerName = p1.gameObject.name;
+        string pieceName = currentPiece.gameObject.name;
+
+        Debug.Log(playerName + " : " + pieceName + " " + buttonName);
+
+        int x, y;
+        x = currentCell.mBoardPosition.x;
+        y = currentCell.mBoardPosition.y;
+
+
+
+
+        //Update the GameState here
+
+        // UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
+        bool noError = mainGameState.GetGameStateOnAction(buttonName, mainGameState.allBoardCells[x, y].getPieceState());
+
+        Debug.Log("Move Possible = "+ noError + "\n" + mainGameState);
+
+        //Move the required piece
+        if (buttonName.Equals("Rotate Left"))
+        {
+            Quaternion initialRotation = currentPiece.transform.rotation;
+            float targetRotation = 90f;
+
+            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                yield return RotateAnimation(currentPiece, targetRotation);
+
+            //Change the orientation of the piece
+
+            if (currentPiece.mOrientation.Equals("up"))
+                currentPiece.mOrientation = "left";
+            else if (currentPiece.mOrientation.Equals("left"))
+                currentPiece.mOrientation = "down";
+            else if (currentPiece.mOrientation.Equals("down"))
+                currentPiece.mOrientation = "right";
+            else if (currentPiece.mOrientation.Equals("right"))
+                currentPiece.mOrientation = "up";
+            else if (currentPiece.mOrientation.Equals("+1"))
+                currentPiece.mOrientation = "-1";
+            else
+                currentPiece.mOrientation = "+1";
+
+
+
+        }
+        else if (buttonName.Equals("Rotate Right"))
+        {
+
+            Quaternion initialRotation = currentPiece.transform.rotation;
+            float targetRotation = -90f;
+
+            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                yield return RotateAnimation(currentPiece, targetRotation);
+
+            //Change the orientation of the piece
+
+            if (currentPiece.mOrientation.Equals("left"))
+                currentPiece.mOrientation = "up";
+            else if (currentPiece.mOrientation.Equals("down"))
+                currentPiece.mOrientation = "left";
+            else if (currentPiece.mOrientation.Equals("right"))
+                currentPiece.mOrientation = "down";
+            else if (currentPiece.mOrientation.Equals("up"))
+                currentPiece.mOrientation = "right";
+            else if (currentPiece.mOrientation.Equals("+1"))
+                currentPiece.mOrientation = "-1";
+            else
+                currentPiece.mOrientation = "+1";
+        }
+        else if (buttonName.Equals("Move Up"))
+        {
+            //get the current cell of the piece
+            //set the current cell to the new cell
+            //set the position of the piece as the new Cell
+
+            y = y + 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+        }
+        else if (buttonName.Equals("Move Down"))
+        {
+            y = y - 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+
+
+        }
+        else if (buttonName.Equals("Move Left"))
+        {
+            x = x - 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+
+
+        }
+        else if (buttonName.Equals("Move Right"))
+        {
+            x = x + 1;
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+
+        }
+
+        currentPiece.mCurrentCell = targetCell;
+        Vector3 distanceToTravel = targetCell.transform.position - currentPiece.transform.position;
+        while (currentPiece.transform.position != targetCell.transform.position)
+        {
+
+            yield return MoveAnimation(currentPiece, distanceToTravel);
+        }
+
+
+        currentPiece.mPieceButtons.transform.position = targetCell.transform.position;
+        currentCell.mCurrentPiece = null;
+        targetCell.mCurrentPiece = currentPiece;
+
+       
+
+        p1.doneShooting = false;
+
+        while (p1.IsDoneShooting() == false)
+            yield return p1.ShootingAnimation();
+
+        p1.ResetShooting();
+      
+
+
+        BasePiece shotPlayer = GetPlayerIfShot(
+            p1.mCurrentCell.GetCellPosition().x,
+            p1.mCurrentCell.GetCellPosition().y,
+            p1.mOrientation);
+
+        if (shotPlayer == p1)
+        {
+          //  Debug.Log(p2.name + " Wins");
+          //  UpdateWinState(p2, p2.mCurrentCell.GetCellPosition().y, p2.mCurrentCell.GetCellPosition().x);
+            ResetGame();
+        }
+        else if (shotPlayer == p2)
+        {
+          //  Debug.Log(p1.name + " Wins");
+          //  UpdateWinState(p1, p1.mCurrentCell.GetCellPosition().y, p1.mCurrentCell.GetCellPosition().x);
+            ResetGame();
+        }
+        else { /* do nothing*/ }
+
+        foreach (BasePiece piece in mAllPieces)
+        {
+            piece.mLockMovement = (false);
+            piece.ClearButtons();
+            piece.mPlayerButtons.RotateButtons();
+        }
+
+        if (currentPiece != p1 && currentPiece != p2)
+            currentPiece.mLockMovement = true;
+
+        p2.mLockMovement = (true);
+        p1.mLockMovement = (false);
+
+
+
+        //Change turns for both players
+        p1.ChangeTurn();
+        p2.ChangeTurn();
+
+
+    }
+
+    public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
+    {
+        mPiece.transform.rotation *= Quaternion.Euler(0, 0, targetRotation / 10);
+
+        yield return 0;
+    }
+
+    public IEnumerator MoveAnimation(BasePiece currentPiece, Vector3 distanceToTravel)
+    {
+
+        currentPiece.transform.position = currentPiece.transform.position + (distanceToTravel / 10);//, ref vel, smoothTime);
+
+        yield return 0;
+    }
+
+
     public void ResetGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
-    public void UpdateGameState(BasePiece updatedPiece, Cell previousCell, Cell currentCell, string action)
+
+    public string ComputerMove()
     {
+        string action = "";
 
-        // Debug.Log("The updatedPiece name: " + updatedPiece.gameObject.name);
-        // Debug.Log("Action peformed is " + action);
-        // TODO: action string is never used, can be removed later
-        Vector2Int prevCellPos, currCellPos;
 
-        prevCellPos = previousCell.GetCellPosition();
-        int prevCol = prevCellPos.x;
-        int prevRow = prevCellPos.y;
-
-        currCellPos = currentCell.GetCellPosition();
-        int currentCol = currCellPos.x;
-        int currentRow = currCellPos.y;
-
-        int orientation = gameStateOrientationConventions[updatedPiece.getOrientation()];
-        char pieceName = gameStatePieceConventions[updatedPiece.gameObject.name];
-
-        // updating if last mirror moved or set to null
-        if(pieceName.Equals('M'))
-        {
-            gameState.setLastMirrorMoved(new PieceState('M', currentRow, currentCol, orientation));
-        } else
-        {
-            gameState.setLastMirrorMoved(null);
-        }
-
-        // updating cells
-        if (prevCellPos.Equals(currCellPos))
-        {
-            // update orienation only even if it just shoots
-            gameState.getCellState(prevRow, prevCol).getPieceState().setPieceOrientation(orientation);
-        } else
-        {
-            /* update the piece position
-             * 1. previous cell to null
-             * 2. current cell will now have the piece with the same orientation
-             */
-
-            // previous cell
-            gameState.getCellState(prevRow, prevCol).getPieceState().setNullState();
-
-            // current cell
-            
-            CellState cellState = gameState.getCellState(currentRow, currentCol);
-            PieceState pieceState = cellState.getPieceState();
-            pieceState.updatePieceState(pieceName, currentRow, currentCol, orientation);
-
-        }
-
-        gameState.changeCurrentTurn();
-        gameState.incrementNumOfMoves();
-    }
-
-    public void UpdateWinState(BasePiece winningPiece, int row, int col)
-    {
-        char pieceName = gameStatePieceConventions[winningPiece.gameObject.name];
-        int orientation = gameStateOrientationConventions[winningPiece.getOrientation()];
-        gameState.gameWon(new PieceState(pieceName, row, col, orientation));
-    }
-
-    public void computerMove()
-    {
+        return action;
 
     }
 
-    public List<GameState> alphaBetaPrune()
+    public List<GameState> AlphaBetaPrune()
     {
         List<GameState> bestMoves = new List<GameState>();
         List<GameState> min;
@@ -383,17 +559,17 @@ public class PieceManager : MonoBehaviour
         return bestMoves;
     }
 
-    private int heuristic(GameState gameState)
+    private int Heuristic(GameState gameState)
     {
         int cost = 0;
-        if (subHeuristic(gameState, true) == 0)
+        if (SubHeuristic(gameState, true) == 0)
             cost = -100000;
         else
-            cost = subHeuristic(gameState, true) - subHeuristic(gameState, false);
+            cost = SubHeuristic(gameState, true) - SubHeuristic(gameState, false);
         return cost;
     }
 
-    public int subHeuristic(GameState gameState, bool opponent)
+    public int SubHeuristic(GameState gameState, bool opponent)
     {
         int cost = 0;
 
@@ -402,6 +578,6 @@ public class PieceManager : MonoBehaviour
         return cost;
     }
 
-    public GameState getGameState() { return gameState; }
+    
 
 }
