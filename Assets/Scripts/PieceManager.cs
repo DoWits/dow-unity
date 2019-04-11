@@ -12,9 +12,10 @@ public class PieceManager : MonoBehaviour
 {
     //List of Mirrors and Players
 
-
+    AIScript helper = new AIScript();
+    public bool currentTurn = true;
     private EdgeCollider2D edges;
-    private string mGameMode = "PvP";
+    private string mGameMode = "PvA";
     private List<BasePiece> mMirrors = null;
     private Board mBoard;
     private int mTotalMirrors = 4;
@@ -50,32 +51,14 @@ public class PieceManager : MonoBehaviour
         {"-1", typeof(MirrorPiece) }
     };
 
-    private Dictionary<string, char> gameStatePieceConventions = new Dictionary<string, char>()
-    {
-        {"P1", '1' },
-        {"P2", '2' },
-        {"M1", 'M' },
-        {"M2", 'M' },
-        {"M3", 'M' },
-        {"M4", 'M' },
-    };
 
-    private Dictionary<string, int> gameStateOrientationConventions = new Dictionary<string, int>()
-    {
-        {"up", 0 },
-        {"right", 1 },
-        {"down", 2 },
-        {"left", 3 },
-        {"-1", 0 },
-        {"+1", 1 },
-    };
 
     GameState mainGameState;
 
 
     public void Setup(Board board, List<BasePiece> allPieces, string GameMode)
     {
-
+        currentTurn = true;
 
         mBoard = board;
 
@@ -107,6 +90,7 @@ public class PieceManager : MonoBehaviour
         mAllPieces = allPieces;
 
         mainGameState = new GameState();
+        //Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
 
     }
 
@@ -305,22 +289,7 @@ public class PieceManager : MonoBehaviour
     }
 
 
-    public void GameStateToButton(GameState initialGameState, GameState finalGameState)
-    {
-        BasePiece changedPiece = null;
-        string buttonName = "";
-        if (initialGameState == finalGameState)
-            buttonName = "Shoot";
-        else
-        {
-
-
-
-        }
-
-        changedPiece.MovePiece(changedPiece, buttonName);
-        
-    }
+   
 
 
 
@@ -357,7 +326,7 @@ public class PieceManager : MonoBehaviour
         string playerName = p1.gameObject.name;
         string pieceName = currentPiece.gameObject.name;
 
-        Debug.Log(playerName + " : " + pieceName + " " + buttonName);
+        //Debug.Log(playerName + " : " + pieceName + " " + buttonName);
 
         int x, y;
         x = currentCell.mBoardPosition.x;
@@ -371,87 +340,68 @@ public class PieceManager : MonoBehaviour
         // UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
         bool noError = mainGameState.GetGameStateOnAction(buttonName, mainGameState.allBoardCells[x, y].getPieceState());
 
-        Debug.Log("Move Possible = "+ noError + "\n" + mainGameState);
+        //Testing
+
+
+       // Debug.Log("Move Possible = "+ noError + "\n" + mainGameState);
+
 
         //Move the required piece
-        if (buttonName.Equals("Rotate Left"))
+
+        if (buttonName.Contains("Rotate"))
         {
+            string orientation = currentPiece.mOrientation;
             Quaternion initialRotation = currentPiece.transform.rotation;
-            float targetRotation = 90f;
+            float targetRotation = 0;
+            int numOrientation = OrientationToNum[orientation];
 
-            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
-                yield return RotateAnimation(currentPiece, targetRotation);
+            if (buttonName.Equals("Rotate Left"))
+            {
+                targetRotation = 90f;
 
-            //Change the orientation of the piece
+                while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                    yield return RotateAnimation(currentPiece, targetRotation);
 
-            if (currentPiece.mOrientation.Equals("up"))
-                currentPiece.mOrientation = "left";
-            else if (currentPiece.mOrientation.Equals("left"))
-                currentPiece.mOrientation = "down";
-            else if (currentPiece.mOrientation.Equals("down"))
-                currentPiece.mOrientation = "right";
-            else if (currentPiece.mOrientation.Equals("right"))
-                currentPiece.mOrientation = "up";
-            else if (currentPiece.mOrientation.Equals("+1"))
-                currentPiece.mOrientation = "-1";
+                numOrientation--;
+
+            }
+            else if (buttonName.Equals("Rotate Right"))
+            {
+                 targetRotation = -90f;
+
+                while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                    yield return RotateAnimation(currentPiece, targetRotation);
+
+                numOrientation++;
+            }
+
+            if (currentPiece.mOrientation.Contains("1"))
+            {
+                numOrientation = numOrientation % 2;
+                if (numOrientation < 0)
+                    numOrientation = 2 + numOrientation;
+                currentPiece.mOrientation = NumtoOrientationMirror[numOrientation];
+
+            }
             else
-                currentPiece.mOrientation = "+1";
-
-
-
+            {
+                numOrientation = numOrientation % 4;
+                if (numOrientation < 0)
+                    numOrientation = 4 + numOrientation;
+                currentPiece.mOrientation = NumtoOrientationPlayer[numOrientation];
+            }
         }
-        else if (buttonName.Equals("Rotate Right"))
-        {
-
-            Quaternion initialRotation = currentPiece.transform.rotation;
-            float targetRotation = -90f;
-
-            while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
-                yield return RotateAnimation(currentPiece, targetRotation);
-
-            //Change the orientation of the piece
-
-            if (currentPiece.mOrientation.Equals("left"))
-                currentPiece.mOrientation = "up";
-            else if (currentPiece.mOrientation.Equals("down"))
-                currentPiece.mOrientation = "left";
-            else if (currentPiece.mOrientation.Equals("right"))
-                currentPiece.mOrientation = "down";
-            else if (currentPiece.mOrientation.Equals("up"))
-                currentPiece.mOrientation = "right";
-            else if (currentPiece.mOrientation.Equals("+1"))
-                currentPiece.mOrientation = "-1";
-            else
-                currentPiece.mOrientation = "+1";
-        }
-        else if (buttonName.Equals("Move Up"))
-        {
-            //get the current cell of the piece
-            //set the current cell to the new cell
-            //set the position of the piece as the new Cell
-
-            y = y + 1;
+        else if (buttonName.Contains("Move")) { 
+            if (buttonName.Equals("Move Up"))           
+                y = y + 1;           
+            else if (buttonName.Equals("Move Down"))           
+                y = y - 1;           
+            else if (buttonName.Equals("Move Left"))                
+                x = x - 1;            
+            else if (buttonName.Equals("Move Right"))            
+                x = x + 1;
+            
             targetCell = currentCell.mBoard.mAllCells[x, y];
-        }
-        else if (buttonName.Equals("Move Down"))
-        {
-            y = y - 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
-
-        }
-        else if (buttonName.Equals("Move Left"))
-        {
-            x = x - 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
-
-        }
-        else if (buttonName.Equals("Move Right"))
-        {
-            x = x + 1;
-            targetCell = currentCell.mBoard.mAllCells[x, y];
-
         }
 
         currentPiece.mCurrentCell = targetCell;
@@ -485,13 +435,13 @@ public class PieceManager : MonoBehaviour
 
         if (shotPlayer == p1)
         {
-          //  Debug.Log(p2.name + " Wins");
+            Debug.Log(p2.name + " Wins");
           //  UpdateWinState(p2, p2.mCurrentCell.GetCellPosition().y, p2.mCurrentCell.GetCellPosition().x);
             ResetGame();
         }
         else if (shotPlayer == p2)
         {
-          //  Debug.Log(p1.name + " Wins");
+            Debug.Log(p1.name + " Wins");
           //  UpdateWinState(p1, p1.mCurrentCell.GetCellPosition().y, p1.mCurrentCell.GetCellPosition().x);
             ResetGame();
         }
@@ -515,9 +465,63 @@ public class PieceManager : MonoBehaviour
         //Change turns for both players
         p1.ChangeTurn();
         p2.ChangeTurn();
+       // Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
+        //TODO remove the part below this
+
+        currentTurn = !currentTurn;
+
+        //while (currentTurn)
+        //    yield return 0;
+        /*
+        if (!currentTurn)
+        {
+            AIMove(mainGameState, mGameMode);
+
+        }
+        */
+    }
+
+
+    public void AIMove(GameState gameState, string gameMode)
+    {
+        GameState AI = null;
+
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+        //float start = Time.time;
+        sw.Start();
+
+        AI = helper.ComputerMove(gameState, gameMode);
+
+        sw.Stop();
+        Debug.Log("Computer Move took - " + (sw.Elapsed));
+
+
+        //start = Time.time;
+        sw.Restart();
+        Tuple<BasePiece, string> change = mainGameState.GameStateChangeToAction(gameState, AI, mAllPieces);
+        /*
+        if (change.Item1 == null)
+            Debug.Log("\n" + change.Item2);
+        else
+            Debug.Log("\n" + change.Item1.name + "  " + change.Item2 + " " +mainGameState.numOfMoves );
+            */
+        foreach (BasePiece pieceToMove in mAllPieces)
+        {
+            if (pieceToMove.name.Equals(change.Item1.name))
+            {
+                pieceToMove.MovePiece(pieceToMove, change.Item2);
+
+                break;
+            }
+
+        }
+        
 
 
     }
+
+
 
     public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
     {
@@ -550,34 +554,34 @@ public class PieceManager : MonoBehaviour
 
     }
 
-    public List<GameState> AlphaBetaPrune()
+   
+
+   
+
+    Dictionary<string, int> OrientationToNum = new Dictionary<string, int>() {
+        { "up", 0},
+        { "right", 1},
+        { "down", 2},
+        { "left", 3},
+        { "+1", 0},
+        { "-1", 1},
+        };
+
+    Dictionary<int, string> NumtoOrientationPlayer = new Dictionary<int, string>()
     {
-        List<GameState> bestMoves = new List<GameState>();
-        List<GameState> min;
-        List<GameState> max;
+        { 0,"up" },
+        { 1, "right"},
+        { 2, "down"},
+        { 3, "left"},
 
-        return bestMoves;
-    }
-
-    private int Heuristic(GameState gameState)
+    };
+    Dictionary<int, string> NumtoOrientationMirror = new Dictionary<int, string>()
     {
-        int cost = 0;
-        if (SubHeuristic(gameState, true) == 0)
-            cost = -100000;
-        else
-            cost = SubHeuristic(gameState, true) - SubHeuristic(gameState, false);
-        return cost;
-    }
+        { 0, "+1" },
+        { 1, "-1"},
 
-    public int SubHeuristic(GameState gameState, bool opponent)
-    {
-        int cost = 0;
+    };
 
 
-
-        return cost;
-    }
-
-    
 
 }

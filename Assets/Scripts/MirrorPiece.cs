@@ -1,6 +1,4 @@
-﻿//using System.Collections;
-//using System.Collections.Generic;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -77,7 +75,7 @@ public class MirrorPiece : BasePiece
         laserDirection = new Vector3(y * multiplier, x * multiplier, 0);
 
 
-        Debug.Log("Collision at mirror detected");
+        //Debug.Log("Collision at mirror detected");
 
         while (laserObject.IsDoneShooting() == false)
         { yield return laserObject.ShootLaserFromPointAnimation(this.transform.position, laserDirection, this.mCurrentCell.mBoard, (BasePiece)this); }

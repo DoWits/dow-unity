@@ -1,7 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
+﻿
 
 //need to really change the name to piece buttons from player buttons
+
+using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerButtons : MonoBehaviour
 {

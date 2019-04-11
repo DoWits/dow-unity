@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+﻿
+using System.Collections.Generic;
 
 public class PieceState
 {
     string pieceName; // Player1: 1, Player 2: 2, Mirrors: M, rest invalid
-    int row;
-    int col;
+    int x;
+    int y;
     string orientation = "";
     //bool locked = false;
     /*
@@ -16,51 +17,51 @@ public class PieceState
     {
         // TODO: Need to rethink about default orientation when no piece is there for now it is -1
         pieceName = "";
-        row = -1;
-        col = -1;
+        x = -1;
+        y = -1;
         orientation = "";
     }
 
     public PieceState(PieceState anotherPiece)
     {
         pieceName = anotherPiece.getPieceName();
-        row = anotherPiece.getPieceRow();
-        col = anotherPiece.getPieceCol();
+        x = anotherPiece.getPieceX();
+        y = anotherPiece.getPieceY();
         orientation = anotherPiece.getPieceOrientation();
     }
 
-    public PieceState(string pieceName, int row, int col, string orientation)
+    public PieceState(string pieceName, int x, int y, string orientation)
     {
         this.pieceName = pieceName;
-        this.row = row;
-        this.col = col;
+        this.x = x;
+        this.y = y;
         this.orientation = orientation;
     }
 
     public string getPieceName() { return pieceName; }
-    public int getPieceRow() { return row; }
-    public int getPieceCol() { return col; }
+    public int getPieceX() { return x; }
+    public int getPieceY() { return y; }
     public string getPieceOrientation() { return orientation; }
 
     public void setPieceName(string pieceName) { this.pieceName = pieceName; }
-    public void setPieceRow(int row) { this.row = row; }
-    public void setPieceCol(int col) { this.col = col; }
+    public void setPieceRow(int x) { this.x = x; }
+    public void setPiecey(int y) { this.y = y; }
     public void setPieceOrientation(string orientation) { this.orientation = orientation; }
 
     public void setNullState()
     {
         // TODO: Need to rethink about default orientation when no piece is there for now it is -1
         pieceName = "";
-        row = -1;
-        col = -1;
+        x = -1;
+        y = -1;
         orientation = "";
     }
 
-    public void updatePieceState(string pieceName, int row, int col, string orientation)
+    public void updatePieceState(string pieceName, int x, int y, string orientation)
     {
         this.pieceName = pieceName;
-        this.row = row;
-        this.col = col;
+        this.x = x;
+        this.y = y;
         this.orientation = orientation;
     }
 
@@ -82,7 +83,7 @@ public class PieceState
         }
         if(a.pieceName.Equals(b.pieceName))
         {
-            if ((a.row == b.row) && (a.col == b.col) && a.getPieceOrientation().Equals(b.getPieceOrientation()))
+            if ((a.x == b.x) && (a.y == b.y) && a.getPieceOrientation().Equals(b.getPieceOrientation()))
                 return true;
             else
                 return false;
@@ -96,7 +97,7 @@ public class PieceState
 
         if (a.pieceName.Equals(pieceName))
         {
-            if ((a.row == this.row) && (a.col == this.col) && a.getPieceOrientation().Equals(this.getPieceOrientation()))
+            if ((a.x == this.x) && (a.y == this.y) && a.getPieceOrientation().Equals(this.getPieceOrientation()))
                 return true;
             else
                 return false;
@@ -123,11 +124,15 @@ public class PieceState
             if(initialOrientation.Contains("1"))
             {
                 rotation = rotation % 2;
+                if (rotation < 0)
+                    rotation = -rotation;
                 finalOrientation = NumtoOrientationMirror[rotation];
             }
             else
             {
                 rotation = rotation % 4;
+                if (rotation < 0)
+                    rotation = -rotation;
                 finalOrientation = NumtoOrientationPlayer[rotation];
             }
 
@@ -136,28 +141,28 @@ public class PieceState
         }
         else if (action.Contains("Move"))
         {
-            int x = row, y = col;
+            int x1 = x, y1 = y;
             if (action.Contains("Up"))
-                y++;
+                y1++;
             else if (action.Contains("Down"))
-                y--;
+                y1--;
             else if (action.Contains("Left"))
-                x--;
+                x1--;
             else if (action.Contains("Right"))
-                x++;
+                x1++;
 
-            if (x > 4 || x < 0 || y > 4 || y < 0)
+            if (x1 >= 4 || x1 < 0 || y1 >= 4 || y1 < 0)
                 return false;
-            else if (Board[x, y].getPieceState() != null)
+            else if (Board[x1, y1].getPieceState() != null)
                 return false;
 
             else
             {
-                Board[row, col].setPieceState(null);
+                Board[x, y].setPieceState(null);
 
-                row = x;
-                col = y;
-                Board[row, col].setPieceState(this);
+                x = x1;
+                y = y1;
+                Board[x, y].setPieceState(this);
                 
                 return true;
             }
@@ -177,9 +182,9 @@ public class PieceState
 
     Dictionary<string, int> OrientationToNum = new Dictionary<string, int>() {
         { "up", 0},
-        { "down", 1},
-        { "left", 2},
-        { "right", 3},
+        { "right", 1},
+        { "down", 2},
+        { "left", 3},
         { "+1", 0},
         { "-1", 1},
         };
@@ -187,9 +192,9 @@ public class PieceState
     Dictionary<int, string> NumtoOrientationPlayer = new Dictionary<int, string>()
     {
         { 0,"up" },
-        { 1, "down"},
-        { 2, "left"},
-        { 3, "right"},
+        { 1, "right"},
+        { 2, "down"},
+        { 3, "left"},
 
     };
     Dictionary<int, string> NumtoOrientationMirror = new Dictionary<int, string>()

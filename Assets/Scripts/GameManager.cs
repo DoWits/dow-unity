@@ -11,16 +11,17 @@ public class GameManager : MonoBehaviour
     public List<BasePiece> mPieces = null;
 
     //Default GameMode is PvP
-    string GameMode = "PvP";
+    string GameMode = "PvA";
 
     // Start is called before the first frame update
     void Start()
     {
 
-        QualitySettings.vSyncCount = 1;
+        //QualitySettings.vSyncCount = 1;
 
 
-        Camera.main.orthographicSize = 400;
+        //Camera.main.orthographicSize = 400;
+        //Camera.main.aspect = (9/16);
         //Get the GameMode
 
         //Create the Board

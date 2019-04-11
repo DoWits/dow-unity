@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 using System.Collections;
 
 public class PlayerPiece : BasePiece
@@ -20,7 +21,7 @@ public class PlayerPiece : BasePiece
 
         Vector3 LaserPosition = this.transform.position;
 
-        Dictionary<string, Vector3> IncrementList = new Dictionary<string,Vector3>()
+        Dictionary<string, Vector3> IncrementList = new Dictionary<string, Vector3>()
         {
             { "up", new Vector3(0,increment,0)},
             { "down", new Vector3(0,-increment,0)},

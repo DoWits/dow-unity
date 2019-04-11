@@ -20,8 +20,8 @@ public class CellState
     public void PrintCellState()
     {
         Debug.Log("Piece Name: " + pieceState.getPieceName());
-        Debug.Log("Piece Row: " + pieceState.getPieceRow());
-        Debug.Log("Piece Col: " + pieceState.getPieceCol());
+        Debug.Log("Piece Row: " + pieceState.getPieceX());
+        Debug.Log("Piece Col: " + pieceState.getPieceY());
         Debug.Log("Piece Orientation: " + pieceState.getPieceOrientation());
     }
 }

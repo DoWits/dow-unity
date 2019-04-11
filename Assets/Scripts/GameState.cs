@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 public class GameState
 {
@@ -7,9 +8,11 @@ public class GameState
     public bool currentTurn; // Player 1(True) | Player 2(False)
     public List<PieceState> allPieces;
     public int numOfMoves;
-    public List<GameState> availableGameStates;
+   // public List<GameState> availableGameStates;
     public PieceState winningPiece;
-    public bool winningState;
+    public bool winningPlayer;
+    public GameState parentGameState;
+    public int value = 0 ;
 
     public GameState()
     {
@@ -18,14 +21,12 @@ public class GameState
         {
             for (int col = 0; col < 4; col++)
             {
-                // TODO: Need to rethink about default orientation when no piece is there for now it is -1
                 allBoardCells[row, col] = new CellState(null);
             }
         }
 
         allPieces = new List<PieceState>();
 
-        CellState tempCell;
         PieceState tempPiece;
 
         // Player 1
@@ -62,40 +63,48 @@ public class GameState
         lastMirrorMoved = null;
         numOfMoves = 0;
         winningPiece = null;//TODO : is this really needed??
-        winningState = false;
+        winningPlayer = false;
+        parentGameState = null;
     }
 
     public GameState getGameState() { return this; }
 
     public GameState(GameState oldGameState)
     {
-        allPieces = new List<PieceState>(oldGameState.allPieces);
+        allPieces = new List<PieceState>();
+        foreach(PieceState piece in oldGameState.allPieces)
+        {
+            allPieces.Add(new PieceState(piece));
+        }
         allBoardCells = new CellState[4, 4];
         for (int row = 0; row < 4; row++)
         {
             for (int col = 0; col < 4; col++)
             {
-                // TODO: Need to rethink about default orientation when no piece is there for now it is -1
-                allBoardCells[row, col] = new CellState(new PieceState("", row, col, ""));
+                allBoardCells[row, col] = new CellState(null);
             }
         }
 
         foreach (PieceState piece in allPieces)
         {
-            int row = piece.getPieceRow();
-            int col = piece.getPieceCol();
+            int row = piece.getPieceX();
+            int col = piece.getPieceY();
             allBoardCells[row, col].setPieceState(piece);
         }
 
         currentTurn = oldGameState.currentTurn;
         lastMirrorMoved = oldGameState.lastMirrorMoved;
         numOfMoves = oldGameState.numOfMoves;
-        winningPiece = oldGameState.winningPiece;
-        winningState = oldGameState.winningState;
+        if (winningPiece != null)
+        {
+            winningPiece = new PieceState(oldGameState.winningPiece);
+        }
+        winningPlayer= oldGameState.winningPlayer;
+        //parentGameState = oldGameState.parentGameState;
     }
 
 
-    public bool isCurrentTurn() { return currentTurn; }
+    public bool GetCurrentTurn() { return currentTurn; }
     public void changeCurrentTurn() { this.currentTurn = !this.currentTurn; }
 
     public PieceState getLastMirrorMoved() { return lastMirrorMoved; }
@@ -115,23 +124,27 @@ public class GameState
     // methods for winning state
     public void gameWon(PieceState piece)
     {
-        winningState = true;
+        winningPlayer = true;
         winningPiece = piece;
     }
 
-    public bool isWon() { return winningState; }
+    //public bool isWon() { return winningPlayer; }
 
-    public bool ReachedWinningState()
+    public bool ReachedWinningState() // TODO remove this
     {
 
         return true;
     }
 
-    public List<GameState> GetAvailableChildStates(GameState currentGameState)
+    public List<GameState> GetAvailableChildStates(GameState gameState ) //TODO need to test this function
     {
+      //  System.Diagnostics.Stopwatch childStates = new System.Diagnostics.Stopwatch();
+      //  childStates.Start();
+        GameState currentGameState = new GameState(gameState);
+
         List<GameState> availableMoveStates = new List<GameState>();
 
-        if (currentGameState.isWon())
+        if (currentGameState.winningPiece != null)
             return null;
 
         foreach (PieceState piece in currentGameState.allPieces)
@@ -139,40 +152,85 @@ public class GameState
 
             //The P1 and P2 are skipped if it was thier turns in the previous gamestate, i.e , currentGameState
             if (piece.ComparePieces(currentGameState.lastMirrorMoved) ||
-                (piece.Equals("P1") && currentGameState.isCurrentTurn()) || (piece.Equals("P2") && !currentGameState.isCurrentTurn()))
+                (piece.Equals("P1") && currentGameState.GetCurrentTurn()) || (piece.Equals("P2") && !currentGameState.GetCurrentTurn()))
                 continue;
 
             //rotations are always possible except for last mirror moved and opponentPlayer
             foreach(string action in ActionList)
             {
+                //Part for optimization.. not perfect but will do for now
+                if (action.Equals("Rotate Right") && piece.getPieceName().Contains("M"))
+                    continue;
+                if(action.Contains("Move"))
+                {
+                    if(action.Contains("Up"))
+                    {
+                        if (piece.getPieceY() == 3 || currentGameState.allBoardCells[piece.getPieceX(), piece.getPieceY() + 1].getPieceState() != null)
+                            continue;
+                    }
+                    else if (action.Contains("Down"))
+                    {
+                        if (piece.getPieceY() == 0 || currentGameState.allBoardCells[piece.getPieceX(), piece.getPieceY() - 1].getPieceState() != null)
+                            continue;
+                    }
+                    else if(action.Contains("Left"))
+                    {
+                        if (piece.getPieceX() == 0 || currentGameState.allBoardCells[piece.getPieceX() - 1, piece.getPieceY()].getPieceState() != null)
+                            continue;
+                    }
+                    else if (action.Contains("Right"))
+                    {
+                        if (piece.getPieceX() == 3 || currentGameState.allBoardCells[piece.getPieceX() + 1, piece.getPieceY()].getPieceState() != null)
+                            continue;
+                    }
+
+
+                }
+                //end of optimization attempt
+
                 GameState gameStateOnAction = new GameState(currentGameState);
+                
+
                 //the extra function calling here is neccessary so as to make sure that only the newly created gamestate is isoolated and affected 
-                bool actionDone = gameStateOnAction.GetGameStateOnAction(action,  allBoardCells[piece.getPieceRow(), piece.getPieceCol()].getPieceState() );
+                bool actionDone = gameStateOnAction.GetGameStateOnAction(action, gameStateOnAction.allBoardCells[piece.getPieceX(), piece.getPieceY()].getPieceState() );
 
                 if(actionDone)
                 {
+                    //gameStateOnAction.parentGameState = this;
                     availableMoveStates.Add(gameStateOnAction);
                 }
 
             }
-            //incomplete
+            
 
-
+            // TODO : double check if this is done..
 
         }
+       // childStates.Stop();
+       // Debug.Log("Getting ChildStates time " + childStates.Elapsed);
+
+        if (availableMoveStates.Count == 0)
+            return null;
 
 
         return availableMoveStates;
     }
     
 
+
+
     //incomplete check TODO
     public bool GetGameStateOnAction(string action, PieceState pieceToBeChanged)
     {
-        //no action can be taken if the game is won, or the piece to be moved is locked or u are trying to change the enemy piece
-        if (isWon() || pieceToBeChanged.ComparePieces(lastMirrorMoved)
-            || (pieceToBeChanged.Equals("P1") && isCurrentTurn()) || (pieceToBeChanged.Equals("P2") && !isCurrentTurn()))
+        if (winningPiece != null || pieceToBeChanged.ComparePieces(lastMirrorMoved))
             return false;
+        if (pieceToBeChanged.getPieceName().Equals("P1")  || pieceToBeChanged.getPieceName().Equals("P2"))
+        {
+            if ((pieceToBeChanged.getPieceName().Equals("P1") && !GetCurrentTurn()) || (pieceToBeChanged.getPieceName().Equals("P2") && GetCurrentTurn()))
+                return false;
+        }
+        //no action can be taken if the game is won, or the piece to be moved is locked or u are trying to change the enemy piece
+        
 
 
         foreach (PieceState piece in allPieces)
@@ -192,10 +250,19 @@ public class GameState
                 setLastMirrorMoved(null);
 
             numOfMoves++;
-            changeCurrentTurn();
-            // TODO check if this is a winning state
-            // TODO if yes, then set winning piece
+            winningPiece = HasWon();
+            if (winningPiece != null) {
 
+                if(winningPiece.getPieceName().Equals("P1"))
+                    winningPlayer = true;
+                else if (winningPiece.getPieceName().Equals("P2"))
+                    winningPlayer = false;
+
+                return true;
+            }
+            else
+                changeCurrentTurn();
+            
 
             return true;
 
@@ -204,26 +271,247 @@ public class GameState
         return false;
     }
 
-    public bool HasWon()
+
+
+    public PieceState HasWon()
     {
+        int x, y;
+        int initialDirection;
+        int directionX = 0, directionY = 0;
+        PieceState encounteredPiece = null;
+        PieceState p1 = null, p2 = null;
+
+        foreach (PieceState piece in allPieces)
+        {
+            if (piece.getPieceName().Equals("P1"))
+                p1 = piece;
+            if (piece.getPieceName().Equals("P2"))
+                p2 = piece;
+        }
+
+        if (currentTurn)
+        {
+            x = p1.getPieceX();
+            y = p1.getPieceY();
+            initialDirection = OrientationToNum[p1.getPieceOrientation()];
+
+        }
+        else
+        {
+            x = p2.getPieceX();
+            y = p2.getPieceY();
+            initialDirection = OrientationToNum[p2.getPieceOrientation()];
+        }
 
 
-    // check this link: https://gist.github.com/abiduzz420/856580f0311c3e3fb16e66df3b66b2c8
+        CellState currentCell = null;
+        // Convert the initial direction to a x and y increments
+        switch (initialDirection)
+        {
+            case 0: directionX = 0; directionY = 1; break;
+            case 1: directionX = 1; directionY = 0; break;
+            case 2: directionX = 0; directionY = -1; break;
+            case 3: directionX = -1; directionY = 0; break;
+        }
+
+        int X = x, Y = y;
+        do
+        {
+            encounteredPiece = null;
+            X = X + directionX;
+            Y = Y + directionY;
+            if (X >= 0 && Y >= 0 && X < 4 && Y < 4)
+            {
+                currentCell = allBoardCells[X, Y];
+                encounteredPiece = allBoardCells[X, Y].getPieceState();
+            }
+
+            if (encounteredPiece != null)
+            {
+
+                if (encounteredPiece.getPieceOrientation().Equals("+1") || encounteredPiece.getPieceOrientation().Equals("-1"))
+                {
+                    int flipSign = 1;
+                    if (encounteredPiece.getPieceOrientation().Equals("-1"))
+                        flipSign = -1;
+                    int tempX = directionX, tempY = directionY;
+                    //update the new direction increment
+
+                    directionX = flipSign * tempY;
+                    directionY = flipSign * tempX;
+
+                }
+                else
+                    break;
+            }
 
 
-        return false;
+        } while (X >= 0 && Y >= 0 && X < 4 && Y < 4);
+
+        if (encounteredPiece != null)
+        {
+            if (encounteredPiece.ComparePieces(p1)) return p2;
+            else return p1;
+        }
+        return null;
     }
+
+
+
+    //This function assumes that the parameters are parent and the child gamestates
+    // TODO need to test this
+    public System.Tuple<PieceState, string> CompareGameStates(GameState parent, GameState child)
+    {
+        List<PieceState>
+            pieceStatesA = parent.allPieces,
+            pieceStatesB = child.allPieces;
+            
+        PieceState 
+            changedPieceA = null,
+            changedPieceB = null,
+            p1 = null,
+            p2 = null;
+        string action = null;
+
+        foreach (PieceState pieceA in pieceStatesA)
+        {
+            if ( p1 != null && pieceA.getPieceName().Equals("P1"))
+                p1 = pieceA;
+            if (p2 != null && pieceA.getPieceName().Equals("P2"))
+                p2 = pieceA;
+
+            foreach (PieceState pieceB in pieceStatesB)
+            {
+                //if they both have the same name then 
+                if (pieceA.getPieceName().Equals(pieceB.getPieceName()))
+                {
+                    //if the pieces are different in any way then return that piece
+                    if (!pieceB.ComparePieces(pieceA))
+                    {
+                        changedPieceA =  pieceA;
+                        changedPieceB = pieceB;
+                        break;
+                    }
+                }
+
+
+            }
+            if (changedPieceA != null)
+                break;
+
+        }
+
+        //get the action Performed
+
+        // shooting 
+
+        if(changedPieceA == null)
+        {
+            action = "Shoot";
+            if (parent.currentTurn)
+                changedPieceA = p1;
+            else
+                changedPieceA = p2;
+
+        }
+        else
+        {
+            //Rotating
+            if (!changedPieceA.getPieceOrientation().Equals(changedPieceB.getPieceOrientation()))
+            {
+                if (changedPieceA.getPieceName().Contains("M"))
+                { action = "Rotate Left"; }
+                else
+                {
+                    int orientationA = OrientationToNum[changedPieceA.getPieceOrientation()];
+                    int orientationB = OrientationToNum[changedPieceB.getPieceOrientation()];
+
+                    if (orientationA-orientationB == 1 || (orientationA == 0 && orientationB == 3))
+                    {
+                        action = "Rotate Left";
+                    }
+                    else if (orientationB - orientationA == 1 || (orientationB == 0 && orientationA == 3))
+                    {
+                        action = "Rotate Right"; 
+                    }
+                    else
+                    {
+                       Debug.LogError("Error in comparing gamestates about orientations");
+
+                    }
+                }
+                
+            }
+            //Moving... check if thier positions are not the same
+            else if (changedPieceA.getPieceX() != changedPieceB.getPieceX() || changedPieceA.getPieceY() != changedPieceB.getPieceY())
+            {
+                if (changedPieceA.getPieceX() < changedPieceB.getPieceX())
+                    action = "Move Right";
+                else if (changedPieceA.getPieceX() > changedPieceB.getPieceX())
+                    action = "Move Left";
+                else if (changedPieceA.getPieceY() < changedPieceB.getPieceY())
+                    action = "Move Up";
+                else if (changedPieceA.getPieceY() > changedPieceB.getPieceY())
+                    action = "Move Down";
+                else
+                    Debug.LogError("Error in comparing gamestates about moving");
+
+            }
+            else
+            {
+                Debug.LogError("Error in comparing gamestates about not rotating,moving or even shooting");
+            }
+        }
+
+        return System.Tuple.Create(changedPieceA, action);
+    }
+
+
+    //TDOO need to test this
+    public System.Tuple<BasePiece, string> GameStateChangeToAction(GameState initialGameState, GameState finalGameState, List<BasePiece> allPieces)
+    {
+        System.Tuple<PieceState, string> change = null;
+        BasePiece pieceToChange = null;
+        string buttonName = "";
+
+        change = CompareGameStates(initialGameState, finalGameState);
+
+        buttonName = change.Item2;
+        //get player 1 and 2
+        //BasePiece p1 = null, p2 = null; //mirror = null, player = null;
+
+        foreach (BasePiece basePiece in allPieces)
+        {
+
+            if (change.Item1 != null && change.Item1.getPieceName().Equals(basePiece.gameObject.name))
+                pieceToChange = basePiece;
+            else if(change.Item1 == null)
+            {
+                if (initialGameState.currentTurn && basePiece.name.Equals("P1"))
+                    pieceToChange = basePiece;
+                else if (!initialGameState.currentTurn && basePiece.name.Equals("P2"))
+                    pieceToChange = basePiece;
+            }
+
+        }
+        
+        return System.Tuple.Create(pieceToChange, buttonName);
+    }
+
+
+
 
 
     List<string> ActionList = new List<string>()
     {
-        "Shoot",
-        "Rotate Left",
-        "Rotate Right",
-        "Move Up",
-        "Move Down",
-        "Move Left",
-        "Move Right",
+       "Rotate Right",
+       "Rotate Left",
+       "Move Up",
+       "Move Down",
+       "Move Left",
+       "Move Right",
+          
+        // "Shoot",
     };
 
 
@@ -240,7 +528,7 @@ public class GameState
         {
             gameState += piece.getPieceName() +" ";
             gameState += piece.getPieceOrientation() + " ";
-            gameState += "(" + piece.getPieceRow() + "," + piece.getPieceCol() + ") \n";
+            gameState += "(" + piece.getPieceX() + "," + piece.getPieceY() + ") \n";
            
         }
 
@@ -256,6 +544,13 @@ public class GameState
 
 
 
-
+    Dictionary<string, int> OrientationToNum = new Dictionary<string, int>() {
+        { "up", 0},
+        { "right", 1},
+        { "down", 2},
+        { "left", 3},
+        { "+1", 0},
+        { "-1", 1},
+        };
 
 }
