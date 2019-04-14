@@ -16,8 +16,8 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
-        //QualitySettings.vSyncCount = 1;
+        GameMode = GameModeSelect.GameMode;
+        QualitySettings.vSyncCount = 1;
 
 
         //Camera.main.orthographicSize = 400;
@@ -34,6 +34,8 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        if (Input.GetKeyDown(KeyCode.Escape))
+            Application.Quit();
+
     }
 }

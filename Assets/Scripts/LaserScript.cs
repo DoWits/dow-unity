@@ -192,7 +192,7 @@ public class LaserScript : MonoBehaviour
             laserEnd.transform.rotation = rotation;
 
             while (laserEnd.transform.localScale.y < 25)
-                yield return IncreaseLaser(direction, laserEnd, 0.003125f);
+                yield return IncreaseLaser(direction, laserEnd, 0.009f);
 
             if (laserEnd != null)
                 Destroy(laserEnd);

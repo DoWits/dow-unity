@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -22,7 +23,7 @@ public class PieceManager : MonoBehaviour
     private BasePiece
         mPlayer1 = null,
         mPlayer2 = null;
-
+    private int mCount = 0;
     public GameObject mShootButtonPrefab;
     public GameObject mPiecePrefab;
     public GameObject mPieceButtonPrefab;
@@ -88,6 +89,8 @@ public class PieceManager : MonoBehaviour
         allPieces.AddRange(mMirrors);
 
         mAllPieces = allPieces;
+
+        mGameMode = GameMode;
 
         mainGameState = new GameState();
         //Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
@@ -295,6 +298,8 @@ public class PieceManager : MonoBehaviour
 
     public  IEnumerator MovePieceCoroutine(BasePiece currentPiece, string buttonName)
     {
+        mCount++;
+
         BasePiece
             p1 = null,
             p2 = null;
@@ -433,17 +438,35 @@ public class PieceManager : MonoBehaviour
             p1.mCurrentCell.GetCellPosition().y,
             p1.mOrientation);
 
-        if (shotPlayer == p1)
+        if (shotPlayer == p1 || shotPlayer == p2)
         {
-            Debug.Log(p2.name + " Wins");
-          //  UpdateWinState(p2, p2.mCurrentCell.GetCellPosition().y, p2.mCurrentCell.GetCellPosition().x);
-            ResetGame();
-        }
-        else if (shotPlayer == p2)
-        {
-            Debug.Log(p1.name + " Wins");
-          //  UpdateWinState(p1, p1.mCurrentCell.GetCellPosition().y, p1.mCurrentCell.GetCellPosition().x);
-            ResetGame();
+            
+            if(mGameMode.Equals("PvA"))
+            {
+                SaveData(mCount.ToString(), "MovesCountAI");
+                if (shotPlayer == p1)
+                    SaveData("1", "AIWinLoss");
+                else if (shotPlayer == p2)
+                    SaveData("0", "AIWinLoss");
+
+            }
+            else if(mGameMode.Equals("PvP"))
+            {
+                SaveData(mCount.ToString(), "MovesCountPvP");
+            }
+
+            mCount = 0;
+            if (shotPlayer == p1)
+            {
+                Debug.Log(p2.name + " Wins");
+            }
+            else if (shotPlayer == p2)
+            {
+                Debug.Log(p1.name + " Wins");
+            }
+                ResetGame();
+
+
         }
         else { /* do nothing*/ }
 
@@ -472,13 +495,13 @@ public class PieceManager : MonoBehaviour
 
         //while (currentTurn)
         //    yield return 0;
-        /*
-        if (!currentTurn)
+        
+        if (!currentTurn && mGameMode.Equals("PvA"))
         {
             AIMove(mainGameState, mGameMode);
 
         }
-        */
+        
     }
 
 
@@ -496,6 +519,8 @@ public class PieceManager : MonoBehaviour
         sw.Stop();
         Debug.Log("Computer Move took - " + (sw.Elapsed));
 
+        if (!SaveData(sw.Elapsed.Ticks.ToString(), "AITime"))
+            Debug.Log("Data not saved");
 
         //start = Time.time;
         sw.Restart();
@@ -541,22 +566,45 @@ public class PieceManager : MonoBehaviour
 
     public void ResetGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene("Start Scene");
     }
 
-
-    public string ComputerMove()
+    // Save data to file
+    public bool SaveData(string data, string fileName)
     {
-        string action = "";
 
+        string filePath = Application.persistentDataPath + "/" + fileName + ".txt";
 
-        return action;
+        string sData = data.ToString() + "\n";
+        try
+        {
 
+            if (!File.Exists(filePath))
+            {
+
+                Debug.Log("About to write into file!");
+                File.WriteAllText(filePath, sData);
+            }
+
+            else
+            {
+                Debug.Log("File is exist! Loading!");
+                File.AppendAllText(filePath, sData);
+            }
+
+        }
+
+        catch (System.Exception e)
+        {
+            return false;
+        }
+
+        return true;
     }
 
-   
 
-   
+
+
 
     Dictionary<string, int> OrientationToNum = new Dictionary<string, int>() {
         { "up", 0},
@@ -583,5 +631,7 @@ public class PieceManager : MonoBehaviour
     };
 
 
+   
 
+    
 }
