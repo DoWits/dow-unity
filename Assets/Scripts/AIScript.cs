@@ -7,7 +7,7 @@ public class AIScript
     int numOfStates = 0;
     int numOfStatesVisited = 0;
     // Start is called before the first frame update
-    public List<GameState> AlphaBetaPrune(GameState gameState)
+    public List<GameState> AlphaBetaPruneVeryHard(GameState gameState)
     {
         int alpha = -100000; // act like negative infinity
         int beta = 100000; // act like infinity
@@ -38,7 +38,6 @@ public class AIScript
 
         //Do a quick check if the game can be won in the next move
 
-        List<GameState> badState = new List<GameState>();
         foreach(GameState gsMIN in min)
         {
             if (gsMIN.winningPiece != null && (gsMIN.GetCurrentTurn() == gsMIN.winningPlayer))
@@ -61,15 +60,7 @@ public class AIScript
         // Populate max branches one at a time (opponent turn)
         foreach (GameState gsMIN in min)
         {
-            if (gsMIN.winningPiece != null && (gsMIN.GetCurrentTurn() == gsMIN.winningPlayer))
-            {
-                bestMoves.Clear();
-                gsMIN.value = 1000000; // winning states are like infinities
-                bestMoves.Add(gsMIN);
-                return bestMoves;
-            }
-
-            else if (gsMIN.winningPiece != null)
+            if (gsMIN.winningPiece != null)
                 continue;
 
             else if (isBadState(gsMIN)) //do not conisder a bad move
@@ -130,13 +121,224 @@ public class AIScript
         return bestMoves;
     }
 
-    public GameState ComputerMove(GameState gameState, string gameMode)
+    public List<GameState> AlphaBetaPruneHard(GameState gameState)
+    {
+
+        List<GameState> bestMoves;
+        List<GameState> min;
+        List<GameState> max;
+
+        bestMoves = new List<GameState>();
+
+        GameState temp = new GameState(gameState);
+        if (temp.HasWon() != null)
+        {
+            temp.changeCurrentTurn();
+            bestMoves.Add(temp);
+            return bestMoves;
+        }
+
+        // Populate min ('non - AI' turn) level of alpha-beta prune tree
+        min = gameState.GetAvailableChildStates(gameState);
+
+
+
+
+
+        //Do a quick check if the game can be won in the next move
+        foreach (GameState gsMIN in min)
+        {
+            if (gsMIN.winningPiece != null && (gsMIN.GetCurrentTurn() == gsMIN.winningPlayer))
+            {
+                bestMoves.Clear();
+                gsMIN.value = 1000000; // winning states are like infinities
+                bestMoves.Add(gsMIN);
+                return bestMoves;
+            }
+
+
+
+            //do a check for the pieces
+            //get previous position.
+            //if new position make ai face towards an edge, remove it.
+            //if(gsMIN.allPieces)
+
+        }
+
+        // Populate max branches one at a time (opponent turn)
+        foreach (GameState gsMIN in min)
+        {
+            if (gsMIN.winningPiece != null)
+                continue;
+
+            else if (isBadState(gsMIN)) //do not conisder a bad move
+                continue;
+
+            max = gsMIN.GetAvailableChildStates(gsMIN);
+            numOfStates += max.Count;
+            numOfStatesVisited++;
+            // Calculate current max branch leaf values
+            bool badMoveFlag = false;
+
+            // bool moveGet = false;
+            foreach (GameState gsMAX in max)
+            {
+                if (gsMAX.winningPiece != null && (gsMAX.GetCurrentTurn() == gsMAX.winningPlayer))
+                {
+                    badMoveFlag = true;
+                    break;
+                }
+                else if (gsMAX.winningPiece != null)
+                    continue;
+
+                else if (isBadState(gsMAX)) // ignore a bad move
+                    continue;
+            }
+
+
+            if (badMoveFlag)
+                continue;
+
+            gsMIN.value = HeuristicSum(gsMIN, gsMIN.GetCurrentTurn());
+            if (gsMIN.value >= 0)
+            {
+                bestMoves.Add(gsMIN);
+
+            }
+        }
+
+        return bestMoves;
+    }
+
+
+    public List<GameState> AlphaBetaPruneMedium(GameState gameState)
+    {
+        List<GameState> bestMoves;
+        List<GameState> min;
+
+        bestMoves = new List<GameState>();
+
+        GameState temp = new GameState(gameState);
+        if (temp.HasWon() != null)
+        {
+            temp.changeCurrentTurn();
+            bestMoves.Add(temp);
+            return bestMoves;
+        }
+
+        // Populate min ('non - AI' turn) level of alpha-beta prune tree
+        min = gameState.GetAvailableChildStates(gameState);
+
+        //Do a quick check if the game can be won in the next move        
+
+        // Populate max branches one at a time (opponent turn)
+        foreach (GameState gsMIN in min)
+        {
+            if (gsMIN.winningPiece != null && (gsMIN.GetCurrentTurn() == gsMIN.winningPlayer))
+            {
+                bestMoves.Clear();
+                gsMIN.value = 1000000; // winning states are like infinities
+                bestMoves.Add(gsMIN);
+                return bestMoves;
+            }
+
+            else if (gsMIN.winningPiece != null)
+                continue;
+
+            else if (isBadState(gsMIN)) //do not conisder a bad move
+                continue;
+
+            // Calculate current max branch leaf values
+
+
+            gsMIN.value = -HeuristicSum(gsMIN, gsMIN.GetCurrentTurn());
+            if (gsMIN.value >= 0)
+            {
+                bestMoves.Add(gsMIN);
+
+            }
+        }
+
+        return bestMoves;
+    }
+
+
+
+
+    public List<GameState> AlphaBetaPruneEasy(GameState gameState)
+    {
+        List<GameState> bestMoves;
+        List<GameState> min;
+
+        bestMoves = new List<GameState>();
+
+        GameState temp = new GameState(gameState);
+        if (temp.HasWon() != null)
+        {
+            temp.changeCurrentTurn();
+            bestMoves.Add(temp);
+            return bestMoves;
+        }
+
+        // Populate min ('non - AI' turn) level of alpha-beta prune tree
+        min = gameState.GetAvailableChildStates(gameState);
+
+
+        numOfStates += min.Count;
+
+
+
+
+        //Do a quick check if the game can be won in the next move
+
+
+
+        // Populate max branches one at a time (opponent turn)
+        foreach (GameState gsMIN in min)
+        {
+            if (gsMIN.winningPiece != null && (gsMIN.GetCurrentTurn() == gsMIN.winningPlayer))
+            {
+                bestMoves.Clear();
+                gsMIN.value = 1000000; // winning states are like infinities
+                bestMoves.Add(gsMIN);
+                return bestMoves;
+            }
+
+            else if (gsMIN.winningPiece != null)
+                continue;
+
+            else if (isBadState(gsMIN)) //do not conisder a bad move
+                continue;
+
+            numOfStatesVisited++;
+            // Calculate current max branch leaf values
+
+            // bool moveGet = false;
+
+
+            gsMIN.value = 0;
+
+            bestMoves.Add(gsMIN);
+
+        }
+
+        return bestMoves;
+    }
+
+    public GameState ComputerMove(GameState gameState, string gameMode, int level)
     {
 
 
         numOfStatesVisited = 0;
-        List<GameState> possibleMoves = AlphaBetaPrune(gameState);
-
+        List<GameState> possibleMoves = new List<GameState>();
+        if (level == 1)
+            possibleMoves = AlphaBetaPruneEasy(gameState);
+        else if (level == 2)
+            possibleMoves = AlphaBetaPruneMedium(gameState);
+        else if (level == 3)
+            possibleMoves = AlphaBetaPruneMedium(gameState);
+        else
+            possibleMoves = AlphaBetaPruneVeryHard(gameState);
 
         Debug.Log("Number of total children states = " + numOfStates+"\n Number of moves available = "+possibleMoves.Count);
 
@@ -188,8 +390,11 @@ public class AIScript
         //return moves[Random.Range(0,moves.Count - 1)];
 
         //Hard mode
-        return moves[0];
-
+        if(level>2)
+            return moves[0];
+        
+        else
+            return moves[Random.Range(0, moves.Count - 1)];
     }
 
 

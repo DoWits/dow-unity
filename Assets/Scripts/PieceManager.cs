@@ -29,6 +29,8 @@ public class PieceManager : MonoBehaviour
     public GameObject mPieceButtonPrefab;
     public GameObject mPieceHolderPrefab;
     public List<BasePiece> mAllPieces;
+    public int mLevel = 1;
+
     private string[] mMirrorOrientation = new string[4]
     {
         "-1","+1","+1","-1"
@@ -57,7 +59,7 @@ public class PieceManager : MonoBehaviour
     GameState mainGameState;
 
 
-    public void Setup(Board board, List<BasePiece> allPieces, string GameMode)
+    public void Setup(Board board, List<BasePiece> allPieces, string GameMode, int level)
     {
         currentTurn = true;
 
@@ -91,6 +93,7 @@ public class PieceManager : MonoBehaviour
         mAllPieces = allPieces;
 
         mGameMode = GameMode;
+        mLevel = level;
 
         mainGameState = new GameState();
         //Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
@@ -498,14 +501,14 @@ public class PieceManager : MonoBehaviour
         
         if (!currentTurn && mGameMode.Equals("PvA"))
         {
-            AIMove(mainGameState, mGameMode);
+            AIMove(mainGameState, mGameMode, mLevel);
 
         }
         
     }
 
 
-    public void AIMove(GameState gameState, string gameMode)
+    public void AIMove(GameState gameState, string gameMode, int level)
     {
         GameState AI = null;
 
@@ -514,7 +517,7 @@ public class PieceManager : MonoBehaviour
         //float start = Time.time;
         sw.Start();
 
-        AI = helper.ComputerMove(gameState, gameMode);
+        AI = helper.ComputerMove(gameState, gameMode, level);
 
         sw.Stop();
         Debug.Log("Computer Move took - " + (sw.Elapsed));
