@@ -1,7 +1,6 @@
 ﻿//using System.Collections;
-//using System.Collections.Generic;
-using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine;
 
 public class Board : MonoBehaviour
 {
@@ -9,7 +8,7 @@ public class Board : MonoBehaviour
 	public GameObject mCellPrefab;
 	 
 
-	[HideInInspector]
+	//[HideInInspector]
 	public Cell[,] mAllCells = new Cell[4,4];
 
 

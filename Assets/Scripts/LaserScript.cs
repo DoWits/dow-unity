@@ -8,6 +8,8 @@ public class LaserScript : MonoBehaviour
 
     public float laserStartX, laserStartY;
 
+    bool laserDoneShooting = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -127,7 +129,7 @@ public class LaserScript : MonoBehaviour
         GameObject laserTarget = hit.collider.transform.gameObject;
         if(laserTarget.name.Contains("Manager"))
         {
-            Debug.Log("Hit the edge");
+           // Debug.Log("Hit the edge");
 
             laserEnd = Instantiate(laserEndPrefab);
             laserEnd.transform.SetParent(parent.transform);
@@ -140,6 +142,12 @@ public class LaserScript : MonoBehaviour
 
             if (laserEnd != null)
                 Destroy(laserEnd);
+            if (laserStart != null)
+                Destroy(laserStart);
+            if (laserMiddle != null)
+                Destroy(laserMiddle);
+            if (laserStartExtenstion != null)
+                Destroy(laserStartExtenstion);
         }
         else if (laserTarget.name.Contains("M"))
         {
@@ -157,13 +165,22 @@ public class LaserScript : MonoBehaviour
 
 
             // put a yield return to MirrorPiece instead of the below
-            hit.collider.SendMessage("OnIncomingLaser",direction);
+
+            hit.collider.SendMessage("ShootingAnimation", direction);
+
 
             if (laserEndAtMirror != null)
                 Destroy(laserEndAtMirror);
+            if (laserStart != null)
+                Destroy(laserStart);
+            if (laserMiddle != null)
+                Destroy(laserMiddle);
+            if (laserStartExtenstion != null)
+                Destroy(laserStartExtenstion);
 
-          //  LaserScript MirrorReflection = new LaserScript();
-          //  MirrorReflection.Setup((BasePiece)laserTarget);
+
+            //  LaserScript MirrorReflection = new LaserScript();
+            //  MirrorReflection.Setup((BasePiece)laserTarget);
 
         }
         else
@@ -175,80 +192,55 @@ public class LaserScript : MonoBehaviour
             laserEnd.transform.rotation = rotation;
 
             while (laserEnd.transform.localScale.y < 25)
-                yield return IncreaseLaser(direction, laserEnd, 0.003125f);
+                yield return IncreaseLaser(direction, laserEnd, 0.009f);
 
             if (laserEnd != null)
                 Destroy(laserEnd);
+            if (laserStart != null)
+                Destroy(laserStart);
+            if (laserMiddle != null)
+                Destroy(laserMiddle);
+            if (laserStartExtenstion != null)
+                Destroy(laserStartExtenstion);
 
-            Debug.Log("Hit a player");
+           // Debug.Log("Hit a player");
         }
 
-      //  if(hit.collider.transform.parent. == )
 
 
-        if (laserStart != null)
-           Destroy(laserStart);
-        if (laserMiddle != null)
-           Destroy(laserMiddle);
-        if (laserStartExtenstion != null)
-            Destroy(laserStartExtenstion);
+        // Remove the extra bits after everything is done
 
-        yield return 0;
+
+
+        laserDoneShooting = true;
+        
         
     }
+
+    
+    public bool IsDoneShooting()
+    {
+        return laserDoneShooting;
+    }
+
+    public void ResetShooting()
+    {
+        laserDoneShooting = false;
+    }
+
     public IEnumerator IncreaseLaser(Vector3 increment, GameObject laser, float rate = 7)
     {
         laser.transform.localScale += new Vector3(0,1,0)*rate ;
         laser.transform.position += increment*rate/2;
-        yield return 0;
+
+        yield return null;
     }
 
 
 
     void Update()
     {
-        /*
-        // Create the laser start from the prefab
-        if (laserStart == null)
-        {
-           
-        }
-        if (laserMiddle == null)
-        {
-           
-        }
-
-        // Define an "infinite" size, not too big but enough to go off screen
-        float maxLaserSize = 20f;
-        float currentLaserSize = maxLaserSize;
-
-        // Raycast at the right as our sprite has been design for that
-        Vector2 laserDirection = this.transform.up;
-        RaycastHit2D hit = Physics2D.Raycast(this.transform.position, laserDirection, maxLaserSize);
-
-        if (hit.collider != null)
-        {
-            // We touched something!
-
-            // -- Get the laser length
-            currentLaserSize = Vector2.Distance(hit.point, this.transform.position);
-
-            // -- Create the end sprite
-            if (laserEnd == null)
-            {
-                laserEnd = Instantiate(laserEnd) as GameObject;
-                laserEnd.transform.parent = this.transform;
-                laserEnd.transform.localPosition = Vector2.zero;
-            }
-        }
-        */
-        /*
-        else
-        {
-            // Nothing hit
-            // -- No more end
-            if (laserEnd != null) Destroy(laserEnd);
-        }*/
+      
 
     }
 }

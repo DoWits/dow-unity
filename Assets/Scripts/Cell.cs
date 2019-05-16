@@ -1,17 +1,16 @@
 ﻿using UnityEngine;
-
 public class Cell : MonoBehaviour
 {
     //TODO - Remove the variable mOutlineImage since we're using buttons instead
 	//public Image mOutlineImage;
 
-	[HideInInspector]
+	//[HideInInspector]
 	public Vector2Int mBoardPosition = Vector2Int.zero;
 
-	[HideInInspector]
+	//[HideInInspector]
 	public Board mBoard = null;
-	[HideInInspector]
-	public RectTransform mRectTransform = null;
+    //[HideInInspector]
+    public RectTransform mRectTransform = null;
 
     public BasePiece mCurrentPiece = null;
 

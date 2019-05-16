@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -11,20 +13,24 @@ public class PieceManager : MonoBehaviour
 {
     //List of Mirrors and Players
 
-
+    AIScript helper = new AIScript();
+    public bool currentTurn = true;
     private EdgeCollider2D edges;
+    private string mGameMode = "PvA";
     private List<BasePiece> mMirrors = null;
     private Board mBoard;
     private int mTotalMirrors = 4;
     private BasePiece
         mPlayer1 = null,
         mPlayer2 = null;
-
+    private int mCount = 0;
     public GameObject mShootButtonPrefab;
     public GameObject mPiecePrefab;
     public GameObject mPieceButtonPrefab;
     public GameObject mPieceHolderPrefab;
     public List<BasePiece> mAllPieces;
+    public int mLevel = 1;
+
     private string[] mMirrorOrientation = new string[4]
     {
         "-1","+1","+1","-1"
@@ -50,10 +56,12 @@ public class PieceManager : MonoBehaviour
 
 
 
+    GameState mainGameState;
 
-    public void Setup(Board board, List<BasePiece> allPieces)
+
+    public void Setup(Board board, List<BasePiece> allPieces, string GameMode, int level)
     {
-
+        currentTurn = true;
 
         mBoard = board;
 
@@ -83,6 +91,12 @@ public class PieceManager : MonoBehaviour
         allPieces.AddRange(mMirrors);
 
         mAllPieces = allPieces;
+
+        mGameMode = GameMode;
+        mLevel = level;
+
+        mainGameState = new GameState();
+        //Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
 
     }
 
@@ -280,9 +294,347 @@ public class PieceManager : MonoBehaviour
         return encounteredPiece;
     }
 
-    public void ResetGame()
+
+   
+
+
+
+    public  IEnumerator MovePieceCoroutine(BasePiece currentPiece, string buttonName)
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        mCount++;
+
+        BasePiece
+            p1 = null,
+            p2 = null;
+
+        Cell currentCell = currentPiece.mCurrentCell;
+        Cell targetCell = currentCell;
+        //Set all peices as Locked
+        foreach (BasePiece piece in mAllPieces)
+        {
+
+
+            if (piece.mOrientation.Equals("left") || piece.mOrientation.Equals("up") || piece.mOrientation.Equals("down") || piece.mOrientation.Equals("right"))
+            {
+                //It's not this player's turn
+                if (piece.mLockMovement)
+                    p2 = piece;
+                //It is this player's turn
+                else
+                    p1 = piece;
+
+            }
+            piece.mLockMovement = true;
+            piece.ClearButtons();
+
+        }
+        //disable the shoot buttons so that p2 can't press it during the animation
+        p1.DisableShoot();
+
+        string playerName = p1.gameObject.name;
+        string pieceName = currentPiece.gameObject.name;
+
+        //Debug.Log(playerName + " : " + pieceName + " " + buttonName);
+
+        int x, y;
+        x = currentCell.mBoardPosition.x;
+        y = currentCell.mBoardPosition.y;
+
+
+
+
+        //Update the GameState here
+
+        // UpdateGameState(currentPiece, currentCell, targetCell, buttonName);
+        bool noError = mainGameState.GetGameStateOnAction(buttonName, mainGameState.allBoardCells[x, y].getPieceState());
+
+        //Testing
+
+
+       // Debug.Log("Move Possible = "+ noError + "\n" + mainGameState);
+
+
+        //Move the required piece
+
+        if (buttonName.Contains("Rotate"))
+        {
+            string orientation = currentPiece.mOrientation;
+            Quaternion initialRotation = currentPiece.transform.rotation;
+            float targetRotation = 0;
+            int numOrientation = OrientationToNum[orientation];
+
+            if (buttonName.Equals("Rotate Left"))
+            {
+                targetRotation = 90f;
+
+                while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                    yield return RotateAnimation(currentPiece, targetRotation);
+
+                numOrientation--;
+
+            }
+            else if (buttonName.Equals("Rotate Right"))
+            {
+                 targetRotation = -90f;
+
+                while (Quaternion.Angle(initialRotation, currentPiece.transform.rotation) < 90)
+                    yield return RotateAnimation(currentPiece, targetRotation);
+
+                numOrientation++;
+            }
+
+            if (currentPiece.mOrientation.Contains("1"))
+            {
+                numOrientation = numOrientation % 2;
+                if (numOrientation < 0)
+                    numOrientation = 2 + numOrientation;
+                currentPiece.mOrientation = NumtoOrientationMirror[numOrientation];
+
+            }
+            else
+            {
+                numOrientation = numOrientation % 4;
+                if (numOrientation < 0)
+                    numOrientation = 4 + numOrientation;
+                currentPiece.mOrientation = NumtoOrientationPlayer[numOrientation];
+            }
+        }
+        else if (buttonName.Contains("Move")) { 
+            if (buttonName.Equals("Move Up"))           
+                y = y + 1;           
+            else if (buttonName.Equals("Move Down"))           
+                y = y - 1;           
+            else if (buttonName.Equals("Move Left"))                
+                x = x - 1;            
+            else if (buttonName.Equals("Move Right"))            
+                x = x + 1;
+            
+            targetCell = currentCell.mBoard.mAllCells[x, y];
+        }
+
+        currentPiece.mCurrentCell = targetCell;
+        Vector3 distanceToTravel = targetCell.transform.position - currentPiece.transform.position;
+        while (currentPiece.transform.position != targetCell.transform.position)
+        {
+
+            yield return MoveAnimation(currentPiece, distanceToTravel);
+        }
+
+
+        currentPiece.mPieceButtons.transform.position = targetCell.transform.position;
+        currentCell.mCurrentPiece = null;
+        targetCell.mCurrentPiece = currentPiece;
+
+       
+
+        p1.doneShooting = false;
+
+        while (p1.IsDoneShooting() == false)
+            yield return p1.ShootingAnimation();
+
+        p1.ResetShooting();
+      
+
+
+        BasePiece shotPlayer = GetPlayerIfShot(
+            p1.mCurrentCell.GetCellPosition().x,
+            p1.mCurrentCell.GetCellPosition().y,
+            p1.mOrientation);
+
+        if (shotPlayer == p1 || shotPlayer == p2)
+        {
+            
+            if(mGameMode.Equals("PvA"))
+            {
+                SaveData(mCount.ToString(), "MovesCountAI");
+                if (shotPlayer == p1)
+                    SaveData("1", "AIWinLoss");
+                else if (shotPlayer == p2)
+                    SaveData("0", "AIWinLoss");
+
+            }
+            else if(mGameMode.Equals("PvP"))
+            {
+                SaveData(mCount.ToString(), "MovesCountPvP");
+            }
+
+            mCount = 0;
+            if (shotPlayer == p1)
+            {
+                Debug.Log(p2.name + " Wins");
+            }
+            else if (shotPlayer == p2)
+            {
+                Debug.Log(p1.name + " Wins");
+            }
+                ResetGame();
+
+
+        }
+        else { /* do nothing*/ }
+
+        foreach (BasePiece piece in mAllPieces)
+        {
+            piece.mLockMovement = (false);
+            piece.ClearButtons();
+            piece.mPlayerButtons.RotateButtons();
+        }
+
+        if (currentPiece != p1 && currentPiece != p2)
+            currentPiece.mLockMovement = true;
+
+        p2.mLockMovement = (true);
+        p1.mLockMovement = (false);
+
+
+
+        //Change turns for both players
+        p1.ChangeTurn();
+        p2.ChangeTurn();
+       // Debug.Log(helper.HeuristicSum(mainGameState, mainGameState.currentTurn));
+        //TODO remove the part below this
+
+        currentTurn = !currentTurn;
+
+        //while (currentTurn)
+        //    yield return 0;
+        
+        if (!currentTurn && mGameMode.Equals("PvA"))
+        {
+            AIMove(mainGameState, mGameMode, mLevel);
+
+        }
+        
     }
 
+
+    public void AIMove(GameState gameState, string gameMode, int level)
+    {
+        GameState AI = null;
+
+        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
+
+        //float start = Time.time;
+        sw.Start();
+
+        AI = helper.ComputerMove(gameState, gameMode, level);
+
+        sw.Stop();
+        Debug.Log("Computer Move took - " + (sw.Elapsed));
+
+        if (!SaveData(sw.Elapsed.Ticks.ToString(), "AITime"))
+            Debug.Log("Data not saved");
+
+        //start = Time.time;
+        sw.Restart();
+        Tuple<BasePiece, string> change = mainGameState.GameStateChangeToAction(gameState, AI, mAllPieces);
+        /*
+        if (change.Item1 == null)
+            Debug.Log("\n" + change.Item2);
+        else
+            Debug.Log("\n" + change.Item1.name + "  " + change.Item2 + " " +mainGameState.numOfMoves );
+            */
+        foreach (BasePiece pieceToMove in mAllPieces)
+        {
+            if (pieceToMove.name.Equals(change.Item1.name))
+            {
+                pieceToMove.MovePiece(pieceToMove, change.Item2);
+
+                break;
+            }
+
+        }
+        
+
+
+    }
+
+
+
+    public IEnumerator RotateAnimation(BasePiece mPiece, float targetRotation)
+    {
+        mPiece.transform.rotation *= Quaternion.Euler(0, 0, targetRotation / 10);
+
+        yield return 0;
+    }
+
+    public IEnumerator MoveAnimation(BasePiece currentPiece, Vector3 distanceToTravel)
+    {
+
+        currentPiece.transform.position = currentPiece.transform.position + (distanceToTravel / 10);//, ref vel, smoothTime);
+
+        yield return 0;
+    }
+
+
+    public void ResetGame()
+    {
+        SceneManager.LoadScene("Start Scene");
+    }
+
+    // Save data to file
+    public bool SaveData(string data, string fileName)
+    {
+
+        string filePath = Application.persistentDataPath + "/" + fileName + ".txt";
+
+        string sData = data.ToString() + "\n";
+        try
+        {
+
+            if (!File.Exists(filePath))
+            {
+
+                Debug.Log("About to write into file!");
+                File.WriteAllText(filePath, sData);
+            }
+
+            else
+            {
+                Debug.Log("File is exist! Loading!");
+                File.AppendAllText(filePath, sData);
+            }
+
+        }
+
+        catch (System.Exception e)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+
+
+
+
+    Dictionary<string, int> OrientationToNum = new Dictionary<string, int>() {
+        { "up", 0},
+        { "right", 1},
+        { "down", 2},
+        { "left", 3},
+        { "+1", 0},
+        { "-1", 1},
+        };
+
+    Dictionary<int, string> NumtoOrientationPlayer = new Dictionary<int, string>()
+    {
+        { 0,"up" },
+        { 1, "right"},
+        { 2, "down"},
+        { 3, "left"},
+
+    };
+    Dictionary<int, string> NumtoOrientationMirror = new Dictionary<int, string>()
+    {
+        { 0, "+1" },
+        { 1, "-1"},
+
+    };
+
+
+   
+
+    
 }
